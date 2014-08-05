@@ -1,8 +1,5 @@
 import os
-import sys
 import argparse
-import urlparse
-import urllib2
 import tarfile
 import subprocess
 import shutil
@@ -29,14 +26,15 @@ _WMT_PREFIX = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 _WMT_ETC = os.path.join(_WMT_PREFIX, 'etc', 'wmt')
 _WMT_SHARE = os.path.join(_WMT_PREFIX, 'share', 'wmt')
 
+
 class Error(Exception):
     pass
 
 
 class UploadError(Error):
-    def __init__(self, code, file):
+    def __init__(self, code, filename):
         self._code = code
-        self._file = file
+        self._file = filename
 
     def __str__(self):
         return '%s: unable to upload (error %d)' % (self._file, self._code)
@@ -81,7 +79,7 @@ def load_environment(yaml_file):
     return env
 
 
-def download_run_tarball(server, uuid, dir='.'):
+def download_run_tarball(server, uuid, dest_dir='.'):
     import requests
 
     url = os.path.join(server, 'run/download')
@@ -92,10 +90,10 @@ def download_run_tarball(server, uuid, dir='.'):
                          })
 
     if resp.status_code == 200:
-        dest_name = os.path.join(dir, uuid + '.tar.gz')
+        dest_name = os.path.join(dest_dir, uuid + '.tar.gz')
         with open(dest_name, 'wb') as fp:
             for chunk in resp.iter_content():
-                if chunk: # filter out keep-alive new chunks
+                if chunk:  # filter out keep-alive new chunks
                     fp.write(chunk)
                     fp.flush()
     else:
@@ -146,7 +144,9 @@ def _upload_run_tarball(server, tarball):
 
 
 def upload_run_tarball(server, tarball):
-    #/usr/bin/curl -i -F file=@cb2eb29b-12a8-4979-a961-e283e4f1619d.tar.gz http://csdms.colorado.edu/wmt/api-dev/run/upload/cb2eb29b-12a8-4979-a961-e283e4f1619d
+    # /usr/bin/curl -i -F file=@cb2eb29b-12a8-4979-a961-e283e4f1619d.tar.gz \
+    #  http://csdms.colorado.edu/wmt/api-dev/run/upload/
+    #  cb2eb29b-12a8-4979-a961-e283e4f1619d
 
     cmd = [
         '/usr/bin/curl', '-i', '-F',
@@ -175,8 +175,8 @@ def generate_error_message(name, error, **kwds):
     return '\n'.join([str(error), stderr, ])
 
 
-def create_user_execution_dir(id, prefix='~/.wmt'):
-    path = os.path.join(prefix, id)
+def create_user_execution_dir(run_id, prefix='~/.wmt'):
+    path = os.path.join(prefix, run_id)
 
     try:
         os.makedirs(path)
@@ -211,15 +211,15 @@ def run_component(name, **kwds):
 
 
 class open_logs(object):
-    def __init__(self, name, dir='.'):
-        prefix = os.path.abspath(dir)
+    def __init__(self, name, log_dir='.'):
+        prefix = os.path.abspath(log_dir)
         self._out_log = os.path.join(prefix, '_%s.out' % name)
         self._err_log = os.path.join(prefix, '_%s.err' % name)
 
     def __enter__(self):
         (self._out, self._err) = (open(self._out_log, 'w'),
                                   open(self._err_log, 'w'))
-        return (self._out, self._err)
+        return self._out, self._err
 
     def __exit__(self, type, value, traceback):
         self._out.close()
@@ -234,9 +234,10 @@ def ping_server(server, uuid, status_file):
     while 1:
         time.sleep(10)
         try:
-            time_str = subprocess.check_output(['/usr/bin/tail', '-n1', status_file])
+            time_str = subprocess.check_output(['/usr/bin/tail', '-n1',
+                                                status_file])
             status = 'Time: %s days' % time_str
-        except Exception as error:
+        except Exception:
             #status = 'no status...'
             return
         else:
@@ -245,7 +246,7 @@ def ping_server(server, uuid, status_file):
         
         try:
             update_run_status(server, uuid, 'running', status)
-        except:
+        except Exception:
             pass
 
 
@@ -254,12 +255,12 @@ def ping(server, uuid):
 
 
 class WmtSlave(object):
-    def __init__(self, id, server, env=None, dir='~/.wmt'):
-        self._id = id
-        self._wmt_dir = os.path.expanduser(dir)
-        self._sim_dir = create_user_execution_dir(id, prefix=self._wmt_dir)
+    def __init__(self, run_id, server, exe_env=None, exe_dir='~/.wmt'):
+        self._id = run_id
+        self._wmt_dir = os.path.expanduser(exe_dir)
+        self._sim_dir = create_user_execution_dir(run_id, prefix=self._wmt_dir)
         self._server = server
-        self._env = env
+        self._env = exe_env
         self._result = {}
 
     @property
@@ -276,7 +277,7 @@ class WmtSlave(object):
 
     def setup(self):
         self.update_status('downloading', 'downloading simulation data')
-        dest = self.download_tarball(dir=self._wmt_dir)
+        dest = self.download_tarball(dest_dir=self._wmt_dir)
 
         self.update_status('unpacking', 'unpacking simulation data')
         self.unpack_tarball(dest)
@@ -284,7 +285,7 @@ class WmtSlave(object):
     def run(self):
         for (component, path) in components_to_run(self.sim_dir).items():
             self.update_status('running', 'running component: %s' % component)
-            self.run_component(component, dir=path)
+            self.run_component(component, run_dir=path)
 
     def teardown(self):
         self.update_status('packing', 'packing simulation output')
@@ -319,13 +320,13 @@ class WmtSlave(object):
     def update_status(self, status, message):
         update_run_status(self._server, self.id, status, message)
 
-    def run_component(self, name, dir='.'):
-        with open_logs(name, dir=dir) as (stdout, stderr):
+    def run_component(self, name, run_dir='.'):
+        with open_logs(name, log_dir=run_dir) as (stdout, stderr):
             run_component(name, stdout=stdout, stderr=stderr, env=self._env,
-                          cwd=dir)
+                          cwd=run_dir)
 
-    def download_tarball(self, dir='.'):
-        ans = download_run_tarball(self._server, self.id, dir=dir)
+    def download_tarball(self, dest_dir='.'):
+        ans = download_run_tarball(self._server, self.id, dest_dir=dest_dir)
         return ans
 
     def unpack_tarball(self, path):
@@ -350,12 +351,13 @@ class RunComponentsSeparately(WmtSlave):
     def run(self):
         for (component, path) in components_to_run(self.sim_dir).items():
             self.update_status('running', 'running component: %s' % component)
-            self.run_component(component, dir=path)
+            self.run_component(component, run_dir=path)
 
-    def run_component(self, name, dir='.'):
-        with open_logs(name, dir=dir) as (stdout, stderr):
+    def run_component(self, name, run_dir='.'):
+        with open_logs(name, log_dir=run_dir) as (stdout, stderr):
             run_component(name, stdout=stdout, stderr=stderr, env=self._env,
-                          cwd=dir)
+                          cwd=run_dir)
+
 
 class RunComponentCoupled(WmtSlave):
     def run(self):
@@ -364,9 +366,11 @@ class RunComponentCoupled(WmtSlave):
         import yaml
         with open('model.yaml', 'r') as opened:
             model = yaml.load(opened.read())
-        status_file = os.path.abspath(os.path.join(model['driver'], '_time.txt'))
+        status_file = os.path.abspath(os.path.join(model['driver'],
+                                                   '_time.txt'))
 
-        timer = threading.Thread(target=ping_server, args=[self._server, self.id, status_file])
+        timer = threading.Thread(target=ping_server,
+                                 args=[self._server, self.id, status_file])
         timer.start()
 
         with open('components.yaml', 'r') as opened:
@@ -383,18 +387,8 @@ class RunComponentCoupled(WmtSlave):
         self.update_status('running', 'finished')
 
 
-def launch(id, url, dir='~/.wmt', env={}):
-    #env = {
-    #    'PATH': os.pathsep.join([
-    #        '/home/csdms/wmt/internal/Canopy_64bit/User',
-    #        '/home/csdms/wmt/internal/bin',
-    #        '/bin',
-    #        '/usr/bin',
-    #    ]),
-    #    'LD_LIBRARY_PATH': '/home/csdms/wmt/internal/lib',
-    #}
-
-    task = RunComponentCoupled(id, url, env=env, dir=dir)
+def launch(run_id, url, exe_dir='~/.wmt', exe_env={}):
+    task = RunComponentCoupled(run_id, url, exe_env=exe_env, exe_dir=exe_dir)
     task.execute()
 
     return task.result
@@ -426,8 +420,7 @@ def main():
     env = load_environment(args.env)
 
     try:
-        result = launch(args.id, args.server_url, dir=args.exec_dir,
-                        env=env)
+        _ = launch(args.id, args.server_url, exe_dir=args.exec_dir, exe_env=env)
     except Error as error:
         update_run_status(args.server_url, args.id, 'error', str(error))
         print error
@@ -436,10 +429,10 @@ def main():
                           traceback.format_exc())
         print error
     else:
-        #message = '<a href=%s>pickup</a>' % result['url']
         message = 'pickup'
         update_run_status(args.server_url, args.id, 'success',
-                          'simulation is complete and available for %s' % message)
+                          'simulation is complete and available for %s'
+                          % message)
         print 'success'
 
 
