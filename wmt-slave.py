@@ -79,6 +79,11 @@ def load_environment(yaml_file):
     return env
 
 
+def dump_environment(environ):
+    for item in environ.items():
+        print '%s=%s' % item
+
+
 def download_run_tarball(server, uuid, dest_dir='.'):
     import requests
 
@@ -414,10 +419,15 @@ def main():
                         help='path to execution directory')
     parser.add_argument('--env', default=os.path.join(_WMT_ETC, 'environ.yaml'),
                         help='path to environment file')
-
+    parser.add_argument('--show-env', action='store_true',
+                        help='print execution environment and exit')
     args = parser.parse_args()
 
     env = load_environment(args.env)
+
+    if args.show_env:
+        dump_environment(env)
+        return
 
     try:
         _ = launch(args.id, args.server_url, exe_dir=args.exec_dir, exe_env=env)
