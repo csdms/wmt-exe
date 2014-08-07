@@ -5,7 +5,6 @@ from os import path
 
 _HERE = path.abspath(path.dirname(__file__))
 
-
 def read(*names, **kwds):
     return open(
         path.join(_HERE, *names),
@@ -41,6 +40,9 @@ setup(
     entry_points={
         'console_scripts': [
             'wmt-slave=wmtexe.slave:main',
+        ],
+        'distutils.commands': [
+            'configure = wmtexe.configure:Configure',
         ],
     },
 )
