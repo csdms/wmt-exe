@@ -26,6 +26,7 @@ class Configure(Command):
         ('python-prefix=', None, 'prefix of python installation'),
         ('wmt-prefix=', None, 'prefix of WMT installation'),
         ('components-prefix=', None, 'prefix of components installation'),
+        ('clobber', None, 'clobber existing configuration'),
     ]
 
     def initialize_options(self):
@@ -38,6 +39,8 @@ class Configure(Command):
 
         self.wmt_prefix = '<path-to-wmt>'
         self.components_prefix = '<path-to-components>'
+
+        self.clobber = False
 
     def finalize_options(self):
         for opt in ['with_curl', 'with_bash', 'with_tail', 'cca_prefix']:
@@ -56,6 +59,9 @@ class Configure(Command):
         config.set('wmt', 'python_prefix', self.python_prefix)
         config.set('wmt', 'components_prefix', self.components_prefix)
 
-        return config.write(sys.stdout)
-
-
+        if path.isfile('wmt.cfg') and not self.clobber:
+            print 'wmt.cfg: file exists (use --clobber to overwrite)'
+        else:
+            with open('wmt.cfg', 'w') as opened:
+                config.write(opened)
+            print 'configuration written to wmt.cfg'
