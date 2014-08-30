@@ -1,9 +1,14 @@
 from setuptools import setup, find_packages
+
 from codecs import open
 from os import path
 
+from wmtexe.commands.configure import Configure
+from wmtexe.commands.install import Install
+
 
 _HERE = path.abspath(path.dirname(__file__))
+
 
 def read(*names, **kwds):
     return open(
@@ -20,7 +25,7 @@ def find_version(*file_paths):
                               version_file, re.M)
     if version_match:
         return version_match.group(1)
-    raise RuntimeError("Unable to find vresion string.")
+    raise RuntimeError("Unable to find version string.")
 
 
 setup(
@@ -35,14 +40,22 @@ setup(
 
     license='MIT',
 
-    packages=find_packages(),
+    packages=['wmtexe', 'wmtexe.cmd', ],
 
     entry_points={
         'console_scripts': [
-            'wmt-slave=wmtexe.slave:main',
+            'wmt-slave=wmtexe.cmd.slave:main',
+            'wmt-exe=wmtexe.cmd.exe:main',
+            'wmt-audit=wmtexe.cmd.audit:main',
+            'wmt-activate=wmtexe.cmd.activate:main',
+            'wmt-script=wmtexe.cmd.script:main',
+            'wmt-quickstart=wmtexe.cmd.quickstart:main',
+            'wmt-info=wmtexe.cmd.info:main',
         ],
-        'distutils.commands': [
-            'configure = wmtexe.configure:Configure',
-        ],
+    },
+
+    cmdclass={
+        'configure': Configure,
+        'install': Install,
     },
 )
