@@ -1,102 +1,179 @@
-from os import path, pathsep
+import sys
+from os import path, pathsep, linesep
+from collections import OrderedDict
 import subprocess
 
-
-def find_babel_libs():
-    try:
-        return subprocess.check_output(['cca-spec-babel-config',
-                                        '--var', 'CCASPEC_BABEL_LIBS']).strip()
-    except (OSError, subprocess.CalledProcessError):
-        return None
+from . import formatting
+from .config import load_configuration
 
 
-def python_version(python):
-    version = subprocess.check_output(
-        [python, '-c', 'import sys; print(sys.version[:3])']).strip()
-    return 'python%s' % version
+class Babel(object):
+    def __init__(self, **kwds):
+        prefix = kwds.get('prefix', '')
+        babel_config = kwds.get('babel_config', 'babel-config')
+        cca_spec_babel_config = kwds.get('cca_spec_babel_config',
+                                         'cca-spec-babel-config')
+
+        self._babel_config = path.join(prefix, babel_config)
+        self._cca_spec_babel_config = path.join(prefix,
+                                                cca_spec_babel_config)
+        self._prefix = self.query_var('prefix')
+        self._libs = self.query_cca_spec_var('CCASPEC_BABEL_LIBS')
+
+    @property
+    def babel_config(self):
+        return self._babel_config
+
+    @property
+    def cca_spec_babel_config(self):
+        return self._cca_spec_babel_config
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @property
+    def libs(self):
+        return self._libs
+
+    def query_var(self, var):
+        try:
+            return subprocess.check_output(
+                [self.babel_config, '--query-var=%s' % var]).strip()
+        except (OSError, subprocess.CalledProcessError):
+            return None
+
+    def query_cca_spec_var(self, var):
+        try:
+            return subprocess.check_output(
+                [self.cca_spec_babel_config, '--var', var]).strip()
+        except (OSError, subprocess.CalledProcessError):
+            print [self.cca_spec_babel_config, '--var', var]
+            raise
+            return None
 
 
-def env_from_config_path(path_to_cfg):
-    import ConfigParser
+class Python(object):
+    def __init__(self, python='python'):
+        self._python = python
+        self._version = self.query_version()
+        self._prefix = self.query_exec_prefix()
 
-    config = ConfigParser.RawConfigParser()
-    config.read(path_to_cfg)
+    @property
+    def executable(self):
+        return self._python
 
-    python_prefix = config.get('wmt', 'python_prefix')
-    cca_prefix = config.get('wmt', 'cca_prefix')
-    wmt_prefix = config.get('wmt', 'wmt_prefix')
-    components_prefix = config.get('wmt', 'components_prefix')
+    @property
+    def prefix(self):
+        return self._prefix
 
-    ver = python_version(path.join(python_prefix, 'bin', 'python'))
+    @property
+    def version(self):
+        return self._version
 
-    environ = {
-        'CURL': config.get('wmt', 'curl'),
-        'TAIL': config.get('wmt', 'tail'),
-        'BASH': config.get('wmt', 'bash'),
-        'PYTHONPATH': pathsep.join([
-            path.join(python_prefix, 'lib', ver, 'site-packages'),
-            path.join(python_prefix, 'lib', ver),
-            path.join(components_prefix, 'lib', ver, 'site-packages'),
-            path.join(cca_prefix, 'lib', ver, 'site-packages'),
-            path.join(find_babel_libs(), ver, 'site-packages'),
-        ]),
-        'LD_LIBRARY_PATH': pathsep.join([
-            path.join(python_prefix, 'lib'),
-            path.join(components_prefix, 'lib'),
-            path.join(wmt_prefix, 'lib'),
-            path.join(cca_prefix, 'lib'),
-        ]),
-        'PATH': pathsep.join([
-            path.join(python_prefix, 'bin'),
-            '/usr/local/bin',
-            '/usr/bin',
-            '/bin',
-        ]),
-        'CLASSPATH': pathsep.join([
-            path.join(components_prefix, 'lib', 'java'),
-        ]),
-        'SIDL_DLL_PATH': ';'.join([
-            path.join(components_prefix, 'share', 'cca'),
-        ]),
-    }
-    environ['LD_RUN_PATH'] = environ['LD_LIBRARY_PATH']
+    def site_packages(self, prefix=None):
+        return path.join(prefix or self.prefix, 'lib', self.version,
+                         'site-packages')
+    
+    @property
+    def lib(self):
+        return path.join(self.prefix, 'lib')
+    
+    def query_version(self):
+        """Get the version of Python.
 
-    return environ
+        Get the version of a Python instance as *pythonX.Y*.
 
+        Parameters
+        ----------
+        python : string
+            Path to the Python program.
 
-def _is_executable(program):
-    from os import access, X_OK
-    return path.isfile(program) and access(program, X_OK)
+        Returns
+        -------
+        string :
+            The Python version as a string.
+        """
+        version = subprocess.check_output(
+            [self.executable, '-c', 'import sys; print(sys.version[:3])'])
+        return 'python%s' % version.strip()
+
+    def query_exec_prefix(self):
+        prefix = subprocess.check_output(
+            [self.executable, '-c', 'import sys; print(sys.exec_prefix)'])
+        return path.normpath(prefix.strip())
 
 
-def audit(environ):
-    from os import linesep
+class WmtEnvironment(object):
+    def __init__(self):
+        self._env = {}
 
-    messages = []
+    @property
+    def env(self):
+        return OrderedDict(self._env)
 
-    for command in ['TAIL', 'CURL', 'BASH']:
-        if not _is_executable(environ[command]):
-            messages.append('%s: file is not executable' % command)
+    def to_dict(self):
+        return OrderedDict(self._env)
 
-    for path_var in ['PYTHONPATH', 'LD_LIBRARY_PATH', 'PATH', 'CLASSPATH']:
-        for item in environ[path_var].split(pathsep):
-            if not path.isdir(item):
-                messages.append('%s: not a directory' % item)
+    @classmethod
+    def from_dict(clazz, *args, **kwds):
+        env = clazz()
 
-    for path_var in ['SIDL_DLL_PATH']:
-        for item in environ[path_var].split(';'):
-            if not path.isdir(item):
-                messages.append('%s: not a directory' % item)
+        d = dict(*args, **kwds)
 
-    return linesep.join(messages)
+        babel = Babel(babel_config=d['babel_config'],
+                      cca_spec_babel_config=d['cca_spec_babel_config'])
+        python = Python(python=d['python'])
 
+        wmt_prefix = d['wmt_prefix']
+        components_prefix = d['components_prefix']
 
-def main():
-    environ = env_from_config_path('wmt.cfg')
-    for item in environ.items():
-        print 'export %s=%s' % item
-    print audit(environ)
+        env._env.update({
+            'CURL': d['curl'],
+            'TAIL': d['tail'],
+            'BASH': d['bash'],
+            'PYTHONPATH': pathsep.join([
+                python.site_packages(),
+                path.join(python.prefix, 'lib', python.version),
+                python.site_packages(components_prefix),
+                python.site_packages(babel.prefix),
+                path.join(babel.libs, python.version, 'site-packages'),
+            ]),
+            'LD_LIBRARY_PATH': pathsep.join([
+                path.join(python.prefix, 'lib'),
+                path.join(components_prefix, 'lib'),
+                path.join(wmt_prefix, 'lib'),
+                path.join(babel.prefix, 'lib'),
+            ]),
+            'PATH': pathsep.join([
+                path.join(python.prefix, 'bin'),
+                '/usr/local/bin',
+                '/usr/bin',
+                '/bin',
+            ]),
+            'CLASSPATH': pathsep.join([
+                path.join(components_prefix, 'lib', 'java'),
+            ]),
+            'SIDL_DLL_PATH': ';'.join([
+                path.join(components_prefix, 'share', 'cca'),
+            ]),
+        })
+        env._env['LD_RUN_PATH'] = env['LD_LIBRARY_PATH']
 
+        return env
 
-if __name__ == '__main__':
-    main()
+    @classmethod
+    def from_config(clazz, filenames):
+        env = clazz()
+
+        conf = load_configuration(filenames)
+        return env.from_dict(conf.section('paths'))
+
+    def __getitem__(self, key):
+        return self._env[key]
+
+    def __str__(self):
+        lines = []
+        for item in self._env.items():
+            lines.append('export %s=%s' % item)
+        return linesep.join(lines)
