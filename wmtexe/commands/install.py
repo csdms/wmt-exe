@@ -1,7 +1,8 @@
 from setuptools.command.install import install
 import os
 
-from ..wmtexe.config import default_file
+
+from .. import formatting
 
 
 _HELP_MESSAGE = """
@@ -14,6 +15,13 @@ nothing installed.
 """.strip()
 
 
+_POST_INSTALL_MESSAGE = """
+A default configuration file has been installed for you in,
+  {wmt_cfg}
+Before running wmt, double-check the settings in this file, as they are
+probably not what you want.
+""".strip()
+
 def _mkdir_if_missing(path):
     try:
         os.mkdir(path)
@@ -22,9 +30,10 @@ def _mkdir_if_missing(path):
 
 
 def _make_config_if_missing(filename):
+    from ..config import DEFAULT
+
     if not os.path.isfile(filename):
-        with open(filename, 'w') as cfg:
-            cfg.write(default_config())
+        DEFAULT.write(filename)
 
 
 class Install(install):
@@ -45,11 +54,13 @@ class Install(install):
 
         install.run(self)
 
-        prefix = os.path.commonprefix([self.install_lib,
-                                       self.install_scripts])
-
+        prefix = os.path.commonprefix([self.install_lib, self.install_scripts])
         install_etc = self.install_etc or os.path.join(prefix, 'etc')
+        wmt_cfg = os.path.join(install_etc, 'wmt.cfg')
 
         _mkdir_if_missing(install_etc)
 
-        self.copy_file('wmt.cfg', os.path.join(install_etc, 'wmt.cfg'))
+        self.copy_file('wmt.cfg', wmt_cfg)
+
+        print formatting.bright(formatting.red(
+            _POST_INSTALL_MESSAGE.format(wmt_cfg=wmt_cfg)))
