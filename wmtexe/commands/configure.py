@@ -7,29 +7,6 @@ from os import path, pathsep
 import sys
 
 
-_REQUIRED_PROGRAMS = ['curl', 'bash', 'tail', 'babel-config',
-                      'cca-spec-babel-config', 'python']
-
-
-def default_config():
-    conf = {}
-
-    for program in _REQUIRED_PROGRAMS:
-        conf[program] = find_executable(program) or program
-    conf['wmt-prefix'] = '/usr/local'
-    conf['components-prefix'] = '/usr/local'
-
-    return conf
-
-_PATH_ATTRIBUTES = [
-    ('curl', 'with_curl'), ('tail', 'with_tail'), ('bash', 'with_bash'),
-    ('python', 'with_python'), ('babel_config', 'with_babel_config'),
-    ('cca_spec_babel_config', 'with_cca_spec_babel_config'),
-    ('wmt_prefix', 'wmt_prefix'),
-    ('components_prefix', 'components_prefix')
-]
-
-
 class Configure(Command):
     """Create local configuration file.
     """
@@ -48,40 +25,35 @@ class Configure(Command):
     ]
 
     def initialize_options(self):
-        default = default_config()
-
-        for item in _PATH_ATTRIBUTES:
-            setattr(self, item[1], default[item[0]])
-
+        self.with_curl = None
+        self.with_bash = None
+        self.with_tail = None
+        self.with_babel_config = None
+        self.with_cca_spec_babel_config = None
+        self.wmt_prefix = None
+        self.components_prefix = None
         self.clobber = False
 
     def finalize_options(self):
-        for (opt, _, _) in self.user_options:
-            if opt.startswith('with_'):
-                setattr(self, opt, path.normpath(getattr(self, opt)))
-
-    def set_paths_section(self, config):
-        section = 'paths'
-
-        config.has_section(section) or config.add_section(section)
-        for (path, attr) in _PATH_ATTRIBUTES:
-            config.set(section, path, getattr(self, attr))
-
-    def set_launcher_section(self, config):
-        section = 'launcher'
-        config.has_section(section) or config.add_section(section)
-        config.set(section, 'launcher', self.launcher)
+        pass
 
     def run(self):
         import ConfigParser
 
-        config = ConfigParser.RawConfigParser()
-        self.set_paths_section(config)
-        self.set_launcher_section(config)
+        from ..config import SiteConfiguration
+
+        config = SiteConfiguration()
+        config.set('paths', 'curl', self.with_curl)
+        config.set('paths', 'bash', self.with_bash)
+        config.set('paths', 'tail', self.with_tail)
+        config.set('paths', 'babel_config', self.with_babel_config)
+        config.set('paths', 'cca_spec_babel_config',
+                   self.with_cca_spec_babel_config)
+        config.set('paths', 'wmt_prefix', self.wmt_prefix)
+        config.set('paths', 'components_prefix', self.components_prefix)
 
         if path.isfile('wmt.cfg') and not self.clobber:
             print 'wmt.cfg: file exists (use --clobber to overwrite)'
         else:
-            with open('wmt.cfg', 'w') as opened:
-                config.write(opened)
+            config.write('wmt.cfg')
             print 'configuration written to wmt.cfg'
