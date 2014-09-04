@@ -21,11 +21,13 @@ def main():
                         help='print execution environment and exit')
     parser.add_argument('--daemon', action='store_true', default=False,
                         help='run in daemon mode')
+    parser.add_argument('--with-wmt-slave', default='wmt-slave',
+                        help='path to wmt-slave executable')
     args = parser.parse_args()
 
     env = WmtEnvironment.from_config(args.config)
 
-    cmd = ['wmt-slave', args.id, '--server-url=%s' % args.server_url,
+    cmd = [args.with_wmt_slave, args.id, '--server-url=%s' % args.server_url,
            '--exec-dir=%s' % args.exec_dir]
 
     if args.show_env:
