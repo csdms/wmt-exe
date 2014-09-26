@@ -110,5 +110,8 @@ def find_components(python='python', env=None):
 
     path_to_mod = path_to_python_module('csdms.model', python=python,
                                         env=env)
-    shared_libs = glob(path.join(path_to_mod, '*.so'))
-    return [path.basename(lib[:-3]) for lib in shared_libs]
+    if path_to_mod is not None:
+        shared_libs = glob(path.join(path_to_mod, '*.so'))
+        return [path.basename(lib[:-3]) for lib in shared_libs]
+    else:
+        return []
