@@ -2,7 +2,7 @@ import os
 from distutils.spawn import find_executable
 
 from .. import formatting
-from ..config import default_paths
+from ..config import _DEFAULTS
 
 
 class Prompter(object):
@@ -75,7 +75,9 @@ def dict_to_ini(d, section):
 
 
 def prompt_for_paths(**kwds):
-    prompt = Prompter('>>>', defaults=default_paths(),
+    defaults = dict(_DEFAULTS)
+
+    prompt = Prompter('>>>', defaults=dict(defaults['paths']),
                       interactive=kwds.get('interactive', False))
 
     prompt.get('bash', 'path to bash')
