@@ -1,0 +1,126 @@
+#! /usr/bin/env python
+import os
+import subprocess
+from distutils.dir_util import mkpath
+
+
+WMT_EXE_INSTALL_PREFIX = '/usr/local/csdms'
+WMT_EXE_REPO = 'https://github.com/csdms/wmt-exe'
+
+
+class create_and_change_dir(object):
+    def __init__(self, dir):
+        self._dir = dir
+
+    def __enter__(self):
+        self._starting_dir = os.path.abspath(os.getcwd())
+        if not os.path.isdir(self._dir):
+            mkpath(self._dir)
+        os.chdir(self._dir)
+        return os.path.abspath(self._dir)
+
+    def __exit__(self, type, value, traceback):
+        os.chdir(self._starting_dir)
+
+
+def which_git():
+    git = os.environ.get('GIT', 'git')
+    try:
+        git = subprocess.check_output(['which', git]).strip()
+    except subprocess.CalledProcessError:
+        raise
+    else:
+        return git
+
+def which_brew():
+    brew = os.environ.get('BREW', 'brew')
+    try:
+        brew = subprocess.check_output(['which', brew]).strip()
+    except subprocess.CalledProcessError:
+        raise
+    else:
+        return brew
+
+
+def git_clone(url, git=None, dir='.'):
+    git = git or which_git()
+
+    with create_and_change_dir(dir) as dir:
+        try:
+            subprocess.check_call([git, 'init', '-q'])
+            subprocess.check_call([git, 'config', 'remote.origin.url', url])
+            subprocess.check_call([git, 'config', 'remote.origin.fetch',
+                                     '+refs/head/*:refs/remotes/origin/*'])
+            subprocess.check_call([git, 'fetch', 'origin',
+                                   'master:refs/remotes/origin/master', '-n',
+                                   '--depth=1'])
+            subprocess.check_call([git, 'reset', '--hard', 'origin/master'])
+        except subprocess.CalledProcessError:
+            raise
+
+
+def git_pull(url, dir='.'):
+    with create_and_change_dir(dir) as dir:
+        try:
+            subprocess.check_call(['git', 'checkout', '-q', 'master'])
+            subprocess.check_call(['git', 'pull', 'origin', '-q',
+                                   'refs/heads/master:refs/remotes/origin/master'])
+        except subprocess.CalledProcessError:
+            raise
+
+
+def git_clone_or_update(url, dir='.'):
+    if os.path.isdir(dir):
+        status('Cloning %s' % url)
+        git_pull(url, dir=dir)
+    else:
+        status('Updating %s' % url)
+        git_clone(url, dir=dir)
+
+
+def brew(formula, brew=None, taps=[], args=[]):
+    brew = brew or which_brew()
+
+    try:
+        for tap in taps:
+            subprocess.check_call([brew, 'tap', tap])
+        subprocess.check_call([brew, 'install', formula] + args)
+    except subprocess.CalledProcessError:
+        raise
+
+
+def status(message):
+    print ' '.join(['==>', message])
+
+
+def prepend_path(var, path):
+    if var in os.environ:
+        os.environ[var] = os.pathsep.join([path, os.environ[var]])
+    else:
+        os.environ[var] = path
+
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--install-prefix',
+                        default=WMT_EXE_INSTALL_PREFIX,
+                        help='Install prefix for wmt-exe')
+    args = parser.parse_args()
+
+    install_prefix = os.path.abspath(args.install_prefix)
+
+    with create_and_change_dir(install_prefix) as dir:
+        prepend_path('PATH', os.path.join(install_prefix, 'homebrew', 'bin'))
+        prepend_path('LD_LIBRARY_PATH',
+                     os.path.join(install_prefix, 'homebrew', 'lib'))
+
+        git_clone_or_update(WMT_EXE_REPO, dir='wmt-exe')
+        git_clone_or_update('https://github.com/Homebrew/homebrew', dir='homebrew')
+
+        brew('cmi', taps=['csdms/tools', 'csdms/models', 'csdms/dupes'],
+             args=['--HEAD'])
+        #     brew=os.path.join(install_prefix, 'homebrew', 'bin', 'brew'))
+
+    status('Finished')
