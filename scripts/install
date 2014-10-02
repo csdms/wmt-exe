@@ -131,11 +131,11 @@ def python_site_packages(python):
                         'site-packages')
 
 
-def install_wmt_exe(prefix, dir='.'):
+def install_wmt_exe(prefix, dir='.', python='python'):
     with create_and_change_dir(dir) as dir:
         create_and_prepend_path(
             'PYTHONPATH', os.path.join(
-                prefix, python_site_packages(which_python())))
+                prefix, python_site_packages(python)))
 
         configure_args = [
             '--wmt-prefix=%s' % os.path.join(prefix, 'homebrew'),
@@ -143,8 +143,8 @@ def install_wmt_exe(prefix, dir='.'):
             '--clobber',
             ]
 
-        system(['python', 'setup.py', 'configure'] + configure_args)
-        system(['python', 'setup.py', 'develop', '--prefix=%s' % prefix])
+        system([python, 'setup.py', 'configure'] + configure_args)
+        system([python, 'setup.py', 'develop', '--prefix=%s' % prefix])
         system(['wmt-quickstart', '--batch'])
 
 
@@ -155,6 +155,8 @@ if __name__ == '__main__':
     parser.add_argument('--install-prefix',
                         default=WMT_EXE_INSTALL_PREFIX,
                         help='Install prefix for wmt-exe')
+    parser.add_argument('--with-python', default=which_python(),
+                        help='Path to python')
     parser.add_argument('--verbose', action='store_true',
                         help='Be verbose')
 
@@ -173,6 +175,6 @@ if __name__ == '__main__':
              args=['--HEAD'])
 
         git_clone_or_update(WMT_EXE_REPO, dir='wmt-exe')
-        install_wmt_exe(install_prefix, dir='wmt-exe')
+        install_wmt_exe(install_prefix, dir='wmt-exe', python=args.with_python)
 
     status('Finished')
