@@ -1,11 +1,13 @@
 #! /usr/bin/env python
 import os
 import subprocess
+import shutil
 from distutils.dir_util import mkpath
 
 
 WMT_EXE_INSTALL_PREFIX = '/usr/local/csdms'
 WMT_EXE_REPO = 'https://github.com/csdms/wmt-exe'
+HOMEBREW_REPO = 'https://github.com/Homebrew/linuxbrew'
 
 
 class create_and_change_dir(object):
@@ -17,7 +19,7 @@ class create_and_change_dir(object):
         if not os.path.isdir(self._dir):
             mkpath(self._dir)
         os.chdir(self._dir)
-        return os.path.abspath(self._dir)
+        return os.path.abspath(os.getcwd())
 
     def __exit__(self, type, value, traceback):
         os.chdir(self._starting_dir)
@@ -52,6 +54,12 @@ def which_python():
         return python
 
 
+def brew_prefix():
+    brew = which_brew()
+    brew_bindir = os.path.dirname(brew)
+    return os.path.dirname(brew_bindir)
+
+
 def system(*args, **kwds):
     verbose = kwds.pop('verbose', True)
 
@@ -67,6 +75,11 @@ def system(*args, **kwds):
     except subprocess.CalledProcessError:
         status('Error')
         raise
+
+
+def ln_s(src, dst):
+    if not os.path.exists(dst):
+        system(['ln', '-s', src, dst])
 
 
 def git_clone(url, git=None, dir='.'):
@@ -106,6 +119,11 @@ def brew(formula, brew=None, taps=[], args=[]):
     system([brew, 'install', formula] + args)
 
 
+def is_linux_os():
+    import sysconfig
+    return sysconfig.get_platform().startswith('linux')
+
+
 def status(message):
     print ' '.join(['==>', message])
 
@@ -126,9 +144,19 @@ def python_version(python):
     return subprocess.check_output(
         [python, '-c', 'import sys; print(sys.version[:3])']).strip()
 
+
 def python_site_packages(python):
     return os.path.join('lib', 'python%s' % python_version(python),
                         'site-packages')
+
+
+def install_homebrew(prefix, dir='.'):
+    if is_linux_os():
+        with create_and_change_dir(dir) as dir:
+            ln_s('/usr/bin/gcc', os.path.join(dir, 'bin', 'gcc-4.4'))
+            ln_s('/usr/bin/g++', os.path.join(dir, 'bin', 'g++-4.4'))
+            ln_s('/usr/local/epd/bin/python',
+                 os.path.join(dir, 'bin', 'python'))
 
 
 def install_wmt_exe(prefix, dir='.'):
@@ -145,7 +173,25 @@ def install_wmt_exe(prefix, dir='.'):
 
         system(['python', 'setup.py', 'configure'] + configure_args)
         system(['python', 'setup.py', 'develop', '--prefix=%s' % prefix])
-        system(['wmt-quickstart', '--batch'])
+
+        etc_dir = os.path.join(prefix, 'etc')
+        mkpath(etc_dir)
+        shutil.copy('wmt.cfg', etc_dir)
+
+        #system(['wmt-quickstart', '--batch'])
+
+
+def install_csdms_stack(prefix):
+
+    prepend_path('PATH', os.path.join(prefix, 'homebrew', 'bin'))
+    prepend_path('LD_LIBRARY_PATH', os.path.join(prefix, 'homebrew', 'lib'))
+
+    args = ['--HEAD', '-v']
+    if is_linux_os():
+        args += ['--with-java=/usr/local/java/bin/java',
+                 '--with-python=/usr/local/epd/bin/python']
+
+    brew('cmi', taps=['csdms/tools', 'csdms/models', 'csdms/dupes'], args=args)
 
 
 if __name__ == '__main__':
@@ -163,16 +209,11 @@ if __name__ == '__main__':
     install_prefix = os.path.abspath(args.install_prefix)
 
     with create_and_change_dir(install_prefix) as dir:
-        prepend_path('PATH', os.path.join(dir, 'homebrew', 'bin'))
-        prepend_path('LD_LIBRARY_PATH', os.path.join(dir, 'homebrew', 'lib'))
-
-        git_clone_or_update('https://github.com/Homebrew/homebrew',
-                            dir='homebrew')
-
-        brew('cmi', taps=['csdms/tools', 'csdms/models', 'csdms/dupes'],
-             args=['--HEAD'])
-
+        git_clone_or_update(HOMEBREW_REPO, dir='homebrew')
         git_clone_or_update(WMT_EXE_REPO, dir='wmt-exe')
+
+        install_homebrew(install_prefix, dir='homebrew')
+        install_csdms_stack(install_prefix)
         install_wmt_exe(install_prefix, dir='wmt-exe')
 
     status('Finished')
