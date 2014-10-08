@@ -25,33 +25,45 @@ class create_and_change_dir(object):
         os.chdir(self._starting_dir)
 
 
-def which_git():
-    git = os.environ.get('GIT', 'git')
+def which(prog):
+    prog = os.environ.get(prog.upper(), prog)
     try:
-        git = subprocess.check_output(['which', git]).strip()
+        prog = subprocess.check_output(['which', prog],
+                                       stderr=open('/dev/null', 'w')).strip()
     except subprocess.CalledProcessError:
-        raise
+        return None
     else:
-        return git
+        return prog
+
+
+def which_git():
+    return which('git')
+
 
 def which_brew():
-    brew = os.environ.get('BREW', 'brew')
-    try:
-        brew = subprocess.check_output(['which', brew]).strip()
-    except subprocess.CalledProcessError:
-        raise
-    else:
-        return brew
+    return which('brew')
 
 
 def which_python():
-    python = os.environ.get('PYTHON', 'python')
-    try:
-        python = subprocess.check_output(['which', python]).strip()
-    except subprocess.CalledProcessError:
-        raise
-    else:
-        return python
+    return which('python')
+
+
+def which_cc():
+    return which('gcc')
+
+
+def which_cxx():
+    return which('g++')
+
+
+def which_java():
+    return which('java')
+
+
+def gcc_version():
+    version_s = subprocess.check_output([which_gcc(), '-dumpversion']).strip()
+    (major, minor, micro) = version_s.split('.')
+    return '%s.%s' % (major, minor)
 
 
 def brew_prefix():
@@ -153,10 +165,10 @@ def python_site_packages(python):
 def install_homebrew(prefix, dir='.'):
     if is_linux_os():
         with create_and_change_dir(dir) as dir:
-            ln_s('/usr/bin/gcc', os.path.join(dir, 'bin', 'gcc-4.4'))
-            ln_s('/usr/bin/g++', os.path.join(dir, 'bin', 'g++-4.4'))
-            ln_s('/usr/local/epd/bin/python',
-                 os.path.join(dir, 'bin', 'python'))
+            bindir = os.path.join(dir, 'bin')
+            ln_s(which_cc(), os.path.join(bindir, 'gcc-%s' % gcc_version()))
+            ln_s(which_cxx(), os.path.join(bindir, 'g++-%s' % gcc_version()))
+            ln_s(which_python(), os.path.join(bindir, 'python'))
 
 
 def install_wmt_exe(prefix, dir='.'):
@@ -203,8 +215,16 @@ if __name__ == '__main__':
                         help='Install prefix for wmt-exe')
     parser.add_argument('--verbose', action='store_true',
                         help='Be verbose')
+    for prog in ['git', 'brew', 'python', 'gcc', 'g++', 'java']:
+        parser.add_argument('--with-%s' % prog, default=which(prog),
+                            metavar=prog.upper(),
+                            required=not which(prog),
+                            help='Path to %s executable [%s]' % (prog, which(prog)))
 
     args = parser.parse_args()
+
+    for prog in ['git', 'brew', 'python', 'gcc', 'g++', 'java']:
+        os.environ.setdefault(prog.upper(), getattr(args, prog))
 
     install_prefix = os.path.abspath(args.install_prefix)
 
