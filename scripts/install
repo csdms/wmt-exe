@@ -177,9 +177,6 @@ def python_site_packages(python):
                         'site-packages')
 
 
-<<<<<<< HEAD
-def install_wmt_exe(prefix, dir='.', python='python'):
-=======
 def install_homebrew(prefix, dir='.'):
     if is_linux_os():
         with create_and_change_dir(dir) as dir:
@@ -261,7 +258,6 @@ def install_python(prefix, dir='.'):
         system([conda, 'create', '-n', 'wmt'] + requirements)
 
     return os.path.join(env_bindir, 'python')
->>>>>>> 8e3b3e4e5959348741700bf5dc73a6710ee09a96
 
 
 if __name__ == '__main__':
@@ -300,13 +296,9 @@ if __name__ == '__main__':
 
         git_clone_or_update(HOMEBREW_REPO, dir='homebrew')
         git_clone_or_update(WMT_EXE_REPO, dir='wmt-exe')
-<<<<<<< HEAD
-        install_wmt_exe(install_prefix, dir='wmt-exe', python=args.with_python)
-=======
 
         install_homebrew(install_prefix, dir='homebrew')
         install_csdms_stack(install_prefix)
         install_wmt_exe(install_prefix, dir='wmt-exe')
->>>>>>> 8e3b3e4e5959348741700bf5dc73a6710ee09a96
 
     status('Finished')
