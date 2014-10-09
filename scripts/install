@@ -1,11 +1,28 @@
 #! /usr/bin/env python
 import os
 import subprocess
+import shutil
+import urllib2
 from distutils.dir_util import mkpath
 
 
 WMT_EXE_INSTALL_PREFIX = '/usr/local/csdms'
 WMT_EXE_REPO = 'https://github.com/csdms/wmt-exe'
+HOMEBREW_REPO = 'https://github.com/Homebrew/linuxbrew'
+MINICONDA = 'http://repo.continuum.io/miniconda'
+
+SYSTEM_PROGS = ['git', 'gcc', 'g++', 'java']
+
+
+def miniconda_url(version='3.7.0', python=''):
+    if is_linux_os():
+        os = 'Linux-x86_64'
+    else:
+        os = 'MacOSX-x86_64'
+    file = 'Miniconda{python}-{version}-{os}.sh'.format(
+        python=python, version=version, os=os)
+
+    return '/'.join([MINICONDA, file])
 
 
 class create_and_change_dir(object):
@@ -17,39 +34,57 @@ class create_and_change_dir(object):
         if not os.path.isdir(self._dir):
             mkpath(self._dir)
         os.chdir(self._dir)
-        return os.path.abspath(self._dir)
+        return os.path.abspath(os.getcwd())
 
     def __exit__(self, type, value, traceback):
         os.chdir(self._starting_dir)
 
 
-def which_git():
-    git = os.environ.get('GIT', 'git')
+def which(prog):
+    prog = os.environ.get(prog.upper(), prog)
     try:
-        git = subprocess.check_output(['which', git]).strip()
+        prog = subprocess.check_output(['which', prog],
+                                       stderr=open('/dev/null', 'w')).strip()
     except subprocess.CalledProcessError:
-        raise
+        return None
     else:
-        return git
+        return prog
+
+
+def which_git():
+    return which('git')
+
 
 def which_brew():
-    brew = os.environ.get('BREW', 'brew')
-    try:
-        brew = subprocess.check_output(['which', brew]).strip()
-    except subprocess.CalledProcessError:
-        raise
-    else:
-        return brew
+    return which('brew')
 
 
 def which_python():
-    python = os.environ.get('PYTHON', 'python')
-    try:
-        python = subprocess.check_output(['which', python]).strip()
-    except subprocess.CalledProcessError:
-        raise
-    else:
-        return python
+    return which('python')
+
+
+def which_cc():
+    return which('gcc')
+
+
+def which_cxx():
+    return which('g++')
+
+
+def which_java():
+    return which('java')
+
+
+def gcc_version():
+    version_s = subprocess.check_output([which_cc(), '-dumpversion']).strip()
+    (major, minor, micro) = version_s.split('.')
+    return '%s.%s' % (major, minor)
+
+
+def brew_prefix():
+    brew = which_brew()
+    brew_bindir = os.path.dirname(brew)
+    return os.path.dirname(brew_bindir)
 
 
 def system(*args, **kwds):
@@ -67,6 +102,11 @@ def system(*args, **kwds):
     except subprocess.CalledProcessError:
         status('Error')
         raise
+
+
+def ln_s(src, dst):
+    if not os.path.exists(dst):
+        system(['ln', '-s', src, dst])
 
 
 def git_clone(url, git=None, dir='.'):
@@ -106,6 +146,11 @@ def brew(formula, brew=None, taps=[], args=[]):
     system([brew, 'install', formula] + args)
 
 
+def is_linux_os():
+    import sysconfig
+    return sysconfig.get_platform().startswith('linux')
+
+
 def status(message):
     print ' '.join(['==>', message])
 
@@ -126,12 +171,25 @@ def python_version(python):
     return subprocess.check_output(
         [python, '-c', 'import sys; print(sys.version[:3])']).strip()
 
+
 def python_site_packages(python):
     return os.path.join('lib', 'python%s' % python_version(python),
                         'site-packages')
 
 
+<<<<<<< HEAD
 def install_wmt_exe(prefix, dir='.', python='python'):
+=======
+def install_homebrew(prefix, dir='.'):
+    if is_linux_os():
+        with create_and_change_dir(dir) as dir:
+            bindir = os.path.join(dir, 'bin')
+            ln_s(which_cc(), os.path.join(bindir, 'gcc-%s' % gcc_version()))
+            ln_s(which_cxx(), os.path.join(bindir, 'g++-%s' % gcc_version()))
+            ln_s(which_python(), os.path.join(bindir, 'python'))
+
+
+def install_wmt_exe(prefix, dir='.'):
     with create_and_change_dir(dir) as dir:
         create_and_prepend_path(
             'PYTHONPATH', os.path.join(
@@ -143,9 +201,67 @@ def install_wmt_exe(prefix, dir='.', python='python'):
             '--clobber',
             ]
 
-        system([python, 'setup.py', 'configure'] + configure_args)
-        system([python, 'setup.py', 'develop', '--prefix=%s' % prefix])
-        system(['wmt-quickstart', '--batch'])
+        system(['python', 'setup.py', 'configure'] + configure_args)
+        system(['python', 'setup.py', 'develop', '--prefix=%s' % prefix])
+
+        etc_dir = os.path.join(prefix, 'etc')
+        mkpath(etc_dir)
+        shutil.copy('wmt.cfg', etc_dir)
+
+        #system(['wmt-quickstart', '--batch'])
+
+
+def install_csdms_stack(prefix):
+
+    prepend_path('PATH', os.path.join(prefix, 'homebrew', 'bin'))
+    prepend_path('LD_LIBRARY_PATH', os.path.join(prefix, 'homebrew', 'lib'))
+
+    args = ['--HEAD', '-v']
+    if is_linux_os():
+        args += ['--with-java=/usr/local/java/bin/java',
+                 '--with-python=/usr/local/epd/bin/python']
+
+    brew('cmi', taps=['csdms/tools', 'csdms/models', 'csdms/dupes'], args=args)
+
+
+def download_miniconda():
+    status('Fetching %s' % miniconda_url())
+
+    try:
+        response = urllib2.urlopen(miniconda_url())
+    except urllib2.HTTPError as error:
+        raise
+    except urllib2.URLError as error:
+        raise
+    else:
+        with open('miniconda.sh', 'w') as destination:
+            shutil.copyfileobj(response, destination)
+
+    return os.path.abspath('miniconda.sh')
+
+
+def install_python(prefix, dir='.'):
+    import urllib2
+    
+    if not os.path.isfile('miniconda.sh'):
+        download_miniconda()
+
+    install_dir = os.path.join(prefix, dir)
+
+    if not os.path.isdir(install_dir):
+        system(['bash', 'miniconda.sh', '-b', '-p', install_dir])
+
+    conda = os.path.join(install_dir, 'bin', 'conda')
+    system([conda, 'update', 'conda'])
+
+    env_bindir = os.path.join(install_dir, 'envs', 'wmt', 'bin')
+
+    if not os.path.isdir(env_bindir):
+        requirements = ['python=2.7', 'numpy', 'scipy', 'setuptools']
+        system([conda, 'create', '-n', 'wmt'] + requirements)
+
+    return os.path.join(env_bindir, 'python')
+>>>>>>> 8e3b3e4e5959348741700bf5dc73a6710ee09a96
 
 
 if __name__ == '__main__':
@@ -159,22 +275,38 @@ if __name__ == '__main__':
                         help='Path to python')
     parser.add_argument('--verbose', action='store_true',
                         help='Be verbose')
+    parser.add_argument('--with-python', default='internal',
+                         metavar='PYTHON',
+                         help='Path to Python executable [internal]')
+    for prog in SYSTEM_PROGS:
+        parser.add_argument(
+            '--with-%s' % prog, default=which(prog),
+            metavar=prog.upper(), required=not which(prog),
+            help='Path to %s executable [%s]' % (prog, which(prog)))
 
     args = parser.parse_args()
+
+    for prog in SYSTEM_PROGS:
+        os.environ.setdefault(prog.upper(), getattr(args, 'with_' + prog))
 
     install_prefix = os.path.abspath(args.install_prefix)
 
     with create_and_change_dir(install_prefix) as dir:
-        prepend_path('PATH', os.path.join(dir, 'homebrew', 'bin'))
-        prepend_path('LD_LIBRARY_PATH', os.path.join(dir, 'homebrew', 'lib'))
+        if args.with_python == 'internal':
+            os.environ['PYTHON'] = install_python(install_prefix,
+                                                  dir='miniconda')
+        else:
+            os.environ.setdefault('PYTHON', args.with_python)
 
-        git_clone_or_update('https://github.com/Homebrew/homebrew',
-                            dir='homebrew')
-
-        brew('cmi', taps=['csdms/tools', 'csdms/models', 'csdms/dupes'],
-             args=['--HEAD'])
-
+        git_clone_or_update(HOMEBREW_REPO, dir='homebrew')
         git_clone_or_update(WMT_EXE_REPO, dir='wmt-exe')
+<<<<<<< HEAD
         install_wmt_exe(install_prefix, dir='wmt-exe', python=args.with_python)
+=======
+
+        install_homebrew(install_prefix, dir='homebrew')
+        install_csdms_stack(install_prefix)
+        install_wmt_exe(install_prefix, dir='wmt-exe')
+>>>>>>> 8e3b3e4e5959348741700bf5dc73a6710ee09a96
 
     status('Finished')
