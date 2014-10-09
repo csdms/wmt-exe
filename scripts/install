@@ -2,12 +2,27 @@
 import os
 import subprocess
 import shutil
+import urllib2
 from distutils.dir_util import mkpath
 
 
 WMT_EXE_INSTALL_PREFIX = '/usr/local/csdms'
 WMT_EXE_REPO = 'https://github.com/csdms/wmt-exe'
 HOMEBREW_REPO = 'https://github.com/Homebrew/linuxbrew'
+MINICONDA = 'http://repo.continuum.io/miniconda'
+
+SYSTEM_PROGS = ['git', 'gcc', 'g++', 'java']
+
+
+def miniconda_url(version='3.7.0', python=''):
+    if is_linux_os():
+        os = 'Linux-x86_64'
+    else:
+        os = 'MacOSX-x86_64'
+    file = 'Miniconda{python}-{version}-{os}.sh'.format(
+        python=python, version=version, os=os)
+
+    return '/'.join([MINICONDA, file])
 
 
 class create_and_change_dir(object):
@@ -61,7 +76,7 @@ def which_java():
 
 
 def gcc_version():
-    version_s = subprocess.check_output([which_gcc(), '-dumpversion']).strip()
+    version_s = subprocess.check_output([which_cc(), '-dumpversion']).strip()
     (major, minor, micro) = version_s.split('.')
     return '%s.%s' % (major, minor)
 
@@ -206,6 +221,45 @@ def install_csdms_stack(prefix):
     brew('cmi', taps=['csdms/tools', 'csdms/models', 'csdms/dupes'], args=args)
 
 
+def download_miniconda():
+    status('Fetching %s' % miniconda_url())
+
+    try:
+        response = urllib2.urlopen(miniconda_url())
+    except urllib2.HTTPError as error:
+        raise
+    except urllib2.URLError as error:
+        raise
+    else:
+        with open('miniconda.sh', 'w') as destination:
+            shutil.copyfileobj(response, destination)
+
+    return os.path.abspath('miniconda.sh')
+
+
+def install_python(prefix, dir='.'):
+    import urllib2
+    
+    if not os.path.isfile('miniconda.sh'):
+        download_miniconda()
+
+    install_dir = os.path.join(prefix, dir)
+
+    if not os.path.isdir(install_dir):
+        system(['bash', 'miniconda.sh', '-b', '-p', install_dir])
+
+    conda = os.path.join(install_dir, 'bin', 'conda')
+    system([conda, 'update', 'conda'])
+
+    env_bindir = os.path.join(install_dir, 'envs', 'wmt', 'bin')
+
+    if not os.path.isdir(env_bindir):
+        requirements = ['python=2.7', 'numpy', 'scipy', 'setuptools']
+        system([conda, 'create', '-n', 'wmt'] + requirements)
+
+    return os.path.join(env_bindir, 'python')
+
+
 if __name__ == '__main__':
     import argparse
 
@@ -215,20 +269,29 @@ if __name__ == '__main__':
                         help='Install prefix for wmt-exe')
     parser.add_argument('--verbose', action='store_true',
                         help='Be verbose')
-    for prog in ['git', 'brew', 'python', 'gcc', 'g++', 'java']:
-        parser.add_argument('--with-%s' % prog, default=which(prog),
-                            metavar=prog.upper(),
-                            required=not which(prog),
-                            help='Path to %s executable [%s]' % (prog, which(prog)))
+    parser.add_argument('--with-python', default='internal',
+                         metavar='PYTHON',
+                         help='Path to Python executable [internal]')
+    for prog in SYSTEM_PROGS:
+        parser.add_argument(
+            '--with-%s' % prog, default=which(prog),
+            metavar=prog.upper(), required=not which(prog),
+            help='Path to %s executable [%s]' % (prog, which(prog)))
 
     args = parser.parse_args()
 
-    for prog in ['git', 'brew', 'python', 'gcc', 'g++', 'java']:
-        os.environ.setdefault(prog.upper(), getattr(args, prog))
+    for prog in SYSTEM_PROGS:
+        os.environ.setdefault(prog.upper(), getattr(args, 'with_' + prog))
 
     install_prefix = os.path.abspath(args.install_prefix)
 
     with create_and_change_dir(install_prefix) as dir:
+        if args.with_python == 'internal':
+            os.environ['PYTHON'] = install_python(install_prefix,
+                                                  dir='miniconda')
+        else:
+            os.environ.setdefault('PYTHON', args.with_python)
+
         git_clone_or_update(HOMEBREW_REPO, dir='homebrew')
         git_clone_or_update(WMT_EXE_REPO, dir='wmt-exe')
 
