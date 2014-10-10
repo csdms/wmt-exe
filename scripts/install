@@ -25,7 +25,7 @@ def miniconda_url(version='3.7.0', python='', url=None):
     return '/'.join([url, file])
 
 
-class create_and_change_dir(object):
+class cd(object):
     def __init__(self, dir):
         self._dir = dir
 
@@ -113,7 +113,7 @@ def ln_s(src, dst):
 def git_clone(url, git=None, dir='.'):
     git = git or which('git')
 
-    with create_and_change_dir(dir) as dir:
+    with cd(dir):
         system([git, 'init', '-q'])
         system([git, 'config', 'remote.origin.url', url])
         system([git, 'config', 'remote.origin.fetch',
@@ -124,7 +124,7 @@ def git_clone(url, git=None, dir='.'):
 
 
 def git_pull(url, dir='.'):
-    with create_and_change_dir(dir) as dir:
+    with cd(dir):
         system(['git', 'checkout', '-q', 'master'])
         system(['git', 'pull', 'origin', '-q',
                 'refs/heads/master:refs/remotes/origin/master'])
@@ -195,11 +195,11 @@ def fetch_wmt_exe(dir='.', url=None):
 
 
 def install_homebrew(prefix, dir='.'):
-    with create_and_change_dir(prefix) as base:
+    with cd(prefix) as base:
         fetch_homebrew(dir=dir)
 
         if is_linux_os():
-            with create_and_change_dir(os.path.join(dir, 'bin')):
+            with cd(os.path.join(dir, 'bin')):
                 ln_s(which_cc(), 'gcc-%s' % gcc_version())
                 ln_s(which_cxx(), 'g++-%s' % gcc_version())
                 ln_s(which_python(), 'python')
@@ -212,7 +212,7 @@ def install_homebrew(prefix, dir='.'):
 
 def install_wmt_exe(prefix, dir='.'):
     optdir = os.path.join(prefix, 'opt', 'wmt-exe')
-    with create_and_change_dir(optdir):
+    with cd(optdir):
         fetch_wmt_exe()
 
         create_and_prepend_path(
@@ -295,11 +295,11 @@ def install_python(prefix, dir='.'):
     import urllib2
 
     cache = os.path.join(prefix, 'var', 'cache')
-    with create_and_change_dir(cache):
+    with cd(cache):
         miniconda = download_miniconda('miniconda.sh')
 
     conda_prefix = os.path.join(prefix, 'opt', 'conda')
-    with create_and_change_dir(conda_prefix) as base:
+    with cd(conda_prefix) as base:
         conda = os.path.join(base, 'bin', 'conda')
 
         env_bindir = os.path.join(base, 'envs', 'wmt', 'bin')
@@ -373,7 +373,7 @@ if __name__ == '__main__':
     set_build_environ(env=BUILD_ENVIRON)
 
     install_prefix = os.path.abspath(args.prefix)
-    with create_and_change_dir(install_prefix) as base:
+    with cd(install_prefix) as base:
         for dir in ['bin', 'etc', 'tmp', 'var/log', 'var/cache', 'opt']:
             if not os.path.isdir(dir):
                 mkpath(dir)
@@ -389,7 +389,7 @@ if __name__ == '__main__':
     else:
         os.environ.setdefault('BREW', args.with_brew)
 
-    with create_and_change_dir(install_prefix) as dir:
+    with cd(install_prefix) as dir:
         install_csdms_stack(dir)
         install_wmt_exe(dir)
 
