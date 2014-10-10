@@ -142,6 +142,8 @@ def git_clone_or_update(url, dir='.'):
 def brew(formula, brew=None, taps=[], args=[]):
     brew = brew or which('brew')
 
+    prepend_path('PATH', os.path.dirname(which('ruby')))
+
     for tap in taps:
         system([brew, 'tap', tap])
     system([brew, 'install', formula] + args)
@@ -223,8 +225,8 @@ def install_wmt_exe(prefix, dir='.'):
             '--clobber',
             ]
 
-        system(['python', 'setup.py', 'configure'] + configure_args)
-        system(['python', 'setup.py', 'develop', '--prefix=%s' % prefix])
+        system([which_python(), 'setup.py', 'configure'] + configure_args)
+        system([which_python(), 'setup.py', 'develop', '--prefix=%s' % prefix])
 
         etcdir = os.path.join(prefix, 'etc')
         mkpath(etcdir)
@@ -239,8 +241,8 @@ def install_csdms_stack(prefix):
 
     args = ['--HEAD', '-v']
     if is_linux_os():
-        args += ['--with-java=/usr/local/java/bin/java',
-                 '--with-python=/usr/local/epd/bin/python']
+        args += ['--with-java=%s' % which('java'),
+                 '--with-python=%s' % which('python')]
 
     brew('cmi', taps=['csdms/tools', 'csdms/models', 'csdms/dupes'], args=args)
 
@@ -282,7 +284,7 @@ def download_miniconda(dest, cache='.'):
     return os.path.abspath(dest)
 
 
-def set_build_environ(keep=[], env=None):
+def set_build_environ(keep=['HOME'], env=None):
     for key in os.environ.keys():
         if key not in keep:
             del os.environ[key]
@@ -329,6 +331,7 @@ if __name__ == '__main__':
     cc = which('gcc', env='CC')
     cxx = which('g++', env='CXX')
     java = which('java')
+    ruby = which('ruby')
 
     parser = argparse.ArgumentParser()
     parser.add_argument('prefix', help='Install prefix for wmt-exe')
@@ -354,10 +357,19 @@ if __name__ == '__main__':
     parser.add_argument('--with-java', default=java,
                         metavar='java', required=not java,
                         help='Path to Java executable [%s]' % java)
+    parser.add_argument('--with-ruby', default=ruby, metavar='ruby',
+                        required=not ruby,
+                        help='Path to ruby executable [%s]' % ruby)
 
     args = parser.parse_args()
 
-    BUILD_ENVIRON.update(dict(git=git, cc=cc, cxx=cxx, java=java))
+    BUILD_ENVIRON.update({
+        'GIT': args.with_git,
+        'CC': args.with_cc,
+        'CXX': args.with_cxx,
+        'JAVA': args.with_java,
+        'RUBY': args.with_ruby,
+    })
     set_build_environ(env=BUILD_ENVIRON)
 
     install_prefix = os.path.abspath(args.prefix)
