@@ -6,15 +6,15 @@ import urllib2
 from distutils.dir_util import mkpath
 
 
-WMT_EXE_INSTALL_PREFIX = '/usr/local/csdms'
-WMT_EXE_REPO = 'https://github.com/csdms/wmt-exe'
-HOMEBREW_REPO = 'https://github.com/Homebrew/linuxbrew'
-MINICONDA = 'http://repo.continuum.io/miniconda'
+BUILD_ENVIRON = {
+    'PATH': os.pathsep.join(['/usr/bin', '/bin', '/usr/sbin', '/sbin',
+                             '/etc', '/usr/lib']),
+    'HOME': os.path.expanduser('~'),
+}
 
-SYSTEM_PROGS = ['git', 'gcc', 'g++', 'java']
+def miniconda_url(version='3.7.0', python='', url=None):
+    url = url or 'http://repo.continuum.io/miniconda'
 
-
-def miniconda_url(version='3.7.0', python=''):
     if is_linux_os():
         os = 'Linux-x86_64'
     else:
@@ -22,7 +22,7 @@ def miniconda_url(version='3.7.0', python=''):
     file = 'Miniconda{python}-{version}-{os}.sh'.format(
         python=python, version=version, os=os)
 
-    return '/'.join([MINICONDA, file])
+    return '/'.join([url, file])
 
 
 class create_and_change_dir(object):
@@ -40,8 +40,9 @@ class create_and_change_dir(object):
         os.chdir(self._starting_dir)
 
 
-def which(prog):
-    prog = os.environ.get(prog.upper(), prog)
+def which(prog, env=None):
+    prog = os.environ.get(env or prog.upper(), prog)
+
     try:
         prog = subprocess.check_output(['which', prog],
                                        stderr=open('/dev/null', 'w')).strip()
@@ -64,11 +65,11 @@ def which_python():
 
 
 def which_cc():
-    return which('gcc')
+    return which('gcc', env='CC')
 
 
 def which_cxx():
-    return which('g++')
+    return which('g++', env='CXX')
 
 
 def which_java():
@@ -82,13 +83,13 @@ def gcc_version():
 
 
 def brew_prefix():
-    brew = which_brew()
+    brew = which('BREW')
     brew_bindir = os.path.dirname(brew)
     return os.path.dirname(brew_bindir)
 
 
 def system(*args, **kwds):
-    verbose = kwds.pop('verbose', False)
+    verbose = kwds.pop('verbose', True)
 
     status(' '.join(args[0]))
 
@@ -110,7 +111,7 @@ def ln_s(src, dst):
 
 
 def git_clone(url, git=None, dir='.'):
-    git = git or which_git()
+    git = git or which('git')
 
     with create_and_change_dir(dir) as dir:
         system([git, 'init', '-q'])
@@ -139,7 +140,7 @@ def git_clone_or_update(url, dir='.'):
 
 
 def brew(formula, brew=None, taps=[], args=[]):
-    brew = brew or which_brew()
+    brew = brew or which('brew')
 
     for tap in taps:
         system([brew, 'tap', tap])
@@ -177,6 +178,20 @@ def python_site_packages(python):
                         'site-packages')
 
 
+def fetch_homebrew(dir='.', url=None):
+    if url is None:
+        if is_linux_os():
+            url = 'https://github.com/Homebrew/linuxbrew'
+        else:
+            url = 'https://github.com/Homebrew/homebrew'
+
+    git_clone_or_update(url, dir=dir)
+
+
+def fetch_wmt_exe(dir='.', url=None):
+    git_clone_or_update(url or 'https://github.com/csdms/wmt-exe', dir=dir)
+
+
 def install_homebrew(prefix, dir='.'):
     if is_linux_os():
         with create_and_change_dir(dir) as dir:
@@ -190,7 +205,7 @@ def install_wmt_exe(prefix, dir='.'):
     with create_and_change_dir(dir) as dir:
         create_and_prepend_path(
             'PYTHONPATH', os.path.join(
-                prefix, python_site_packages(which('python'))))
+                prefix, python_site_packages(which_python())))
 
         configure_args = [
             '--wmt-prefix=%s' % os.path.join(prefix, 'homebrew'),
@@ -237,6 +252,13 @@ def download_miniconda():
     return os.path.abspath('miniconda.sh')
 
 
+def set_build_environ(keep=[], env=None):
+    for key in os.environ.keys():
+        if key not in keep:
+            del os.environ[key]
+    os.environ.update(env)
+
+
 def install_python(prefix, dir='.'):
     import urllib2
     
@@ -263,12 +285,16 @@ def install_python(prefix, dir='.'):
 if __name__ == '__main__':
     import argparse
 
+    git = which('git')
+    cc = which('gcc', env='CC')
+    cxx = which('g++', env='CXX')
+    java = which('java')
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('--install-prefix',
-                        default=WMT_EXE_INSTALL_PREFIX,
-                        help='Install prefix for wmt-exe')
+    parser.add_argument('prefix', help='Install prefix for wmt-exe')
     parser.add_argument('--verbose', action='store_true',
                         help='Be verbose')
+
     parser.add_argument('--with-python', default='internal',
                          metavar='PYTHON',
                          help='Path to Python executable [internal]')
@@ -276,35 +302,44 @@ if __name__ == '__main__':
                          metavar='BREW',
                          help='Path to brew executable [internal]')
 
-    for prog in SYSTEM_PROGS:
-        parser.add_argument(
-            '--with-%s' % prog, default=which(prog),
-            metavar=prog.upper(), required=not which(prog),
-            help='Path to %s executable [%s]' % (prog, which(prog)))
+    parser.add_argument('--with-git', default=git, metavar='git',
+                        required=not git,
+                        help='Path to git executable [%s]' % git)
+    parser.add_argument('--with-cc', default=cc,
+                        metavar='cc', required=not cc,
+                        help='Path to C compiler [%s]' % cc)
+    parser.add_argument('--with-cxx', default=cxx,
+                        metavar='cxx', required=not cxx,
+                        help='Path to C++ compiler [%s]' % cxx)
+    parser.add_argument('--with-java', default=java,
+                        metavar='java', required=not java,
+                        help='Path to Java executable [%s]' % java)
 
     args = parser.parse_args()
 
-    for prog in SYSTEM_PROGS:
-        os.environ.setdefault(prog.upper(), getattr(args, 'with_' + prog))
+    BUILD_ENVIRON.update(dict(git=git, cc=cc, cxx=cxx, java=java))
+    set_build_environ(env=BUILD_ENVIRON)
 
-    install_prefix = os.path.abspath(args.install_prefix)
+    install_prefix = os.path.abspath(args.prefix)
 
-    with create_and_change_dir(install_prefix) as dir:
-        if args.with_python == 'internal':
+    if args.with_python == 'internal':
+        with create_and_change_dir(install_prefix) as dir:
             os.environ['PYTHON'] = install_python(install_prefix,
                                                   dir='miniconda')
-        else:
-            os.environ.setdefault('PYTHON', args.with_python)
+    else:
+        os.environ.setdefault('PYTHON', args.with_python)
 
-        if args.with_brew == 'internal':
-            git_clone_or_update(HOMEBREW_REPO, dir='homebrew')
+    if args.with_brew == 'internal':
+        with create_and_change_dir(install_prefix) as dir:
+            fetch_homebrew(dir='homebrew')
             install_homebrew(install_prefix, dir='homebrew')
-        else:
-            os.environ.setdefault('BREW', args.with_brew)
+    else:
+        os.environ.setdefault('BREW', args.with_brew)
 
-        git_clone_or_update(WMT_EXE_REPO, dir='wmt-exe')
-
+    with create_and_change_dir(install_prefix) as dir:
         install_csdms_stack(install_prefix)
+
+        fetch_wmt_exe(dir='wmt-exe')
         install_wmt_exe(install_prefix, dir='wmt-exe')
 
     status('Finished')
