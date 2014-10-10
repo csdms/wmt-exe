@@ -9,8 +9,8 @@ from distutils.dir_util import mkpath
 BUILD_ENVIRON = {
     'PATH': os.pathsep.join(['/usr/bin', '/bin', '/usr/sbin', '/sbin',
                              '/etc', '/usr/lib']),
-    'HOME': os.path.expanduser('~'),
 }
+
 
 def miniconda_url(version='3.7.0', python='', url=None):
     url = url or 'http://repo.continuum.io/miniconda'
@@ -211,22 +211,20 @@ def install_homebrew(prefix, dir='.'):
 
 
 def install_wmt_exe(prefix, dir='.'):
-    optdir = os.path.join(prefix, 'opt', 'wmt-exe')
-    with cd(optdir):
+    create_and_prepend_path(
+        'PYTHONPATH', os.path.join(
+            prefix, python_site_packages(which_python())))
+
+    with cd(os.path.join(prefix, 'opt', 'wmt-exe')):
         fetch_wmt_exe()
 
-        create_and_prepend_path(
-            'PYTHONPATH', os.path.join(
-                prefix, python_site_packages(which_python())))
-
-        configure_args = [
+        system([
+            which_python(), 'setup.py', 'configure',
             '--wmt-prefix=%s' % prefix,
             '--components-prefix=%s' % prefix,
             '--clobber',
-            ]
-
-        system([which_python(), 'setup.py', 'configure'] + configure_args)
-        system([which_python(), 'setup.py', 'develop', '--prefix=%s' % prefix])
+        ])
+        system([which_python(), 'setup.py', 'develop'])
 
         etcdir = os.path.join(prefix, 'etc')
         mkpath(etcdir)
@@ -289,6 +287,7 @@ def set_build_environ(keep=['HOME'], env=None):
         if key not in keep:
             del os.environ[key]
     os.environ.update(env)
+    os.environ.setdefault('HOME', os.path.expanduser('~'))
 
 
 def install_python(prefix, dir='.'):
@@ -374,25 +373,22 @@ if __name__ == '__main__':
 
     install_prefix = os.path.abspath(args.prefix)
     with cd(install_prefix) as base:
-        for dir in ['bin', 'etc', 'tmp', 'var/log', 'var/cache', 'opt']:
+        for dir in ['bin', 'etc', 'tmp', 'var/log', 'var/cache', 'opt', 'local']:
             if not os.path.isdir(dir):
                 mkpath(dir)
 
     if args.with_python == 'internal':
-        #os.environ['PYTHON'] = install_python(install_prefix, dir='miniconda')
         os.environ['PYTHON'] = install_python(install_prefix)
     else:
         os.environ.setdefault('PYTHON', args.with_python)
 
     if args.with_brew == 'internal':
-        os.environ['BREW'] = install_homebrew(install_prefix, dir='homebrew')
+        os.environ['BREW'] = install_homebrew(install_prefix, dir='local')
     else:
         os.environ.setdefault('BREW', args.with_brew)
 
     with cd(install_prefix) as dir:
         install_csdms_stack(dir)
         install_wmt_exe(dir)
-
-        #fetch_wmt_exe(dir='wmt-exe')
 
     status('Finished')
