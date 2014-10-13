@@ -242,7 +242,10 @@ def install_csdms_stack(prefix):
         args += ['--with-java=%s' % which('java'),
                  '--with-python=%s' % which('python')]
 
-    brew('cmi', taps=['csdms/tools', 'csdms/models', 'csdms/dupes'], args=args)
+    taps = ['csdms/tools', 'csdms/models', ]
+    if is_linux_os():
+        taps.append('csdms/dupes')
+    brew('cmi', taps=taps, args=args)
 
 
 def checksum_matches(path, md5):
