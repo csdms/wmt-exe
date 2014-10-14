@@ -3,6 +3,8 @@ import os
 import subprocess
 import shutil
 import urllib2
+import sysconfig
+from datetime import datetime
 from distutils.dir_util import mkpath
 
 
@@ -150,7 +152,6 @@ def brew(formula, brew=None, taps=[], args=[]):
 
 
 def is_linux_os():
-    import sysconfig
     return sysconfig.get_platform().startswith('linux')
 
 
@@ -377,6 +378,8 @@ if __name__ == '__main__':
     })
     set_build_environ(env=BUILD_ENVIRON)
 
+    start = datetime.now()
+
     install_prefix = os.path.abspath(args.prefix)
     with cd(install_prefix) as base:
         for dir in ['bin', 'etc', 'tmp', 'var/log', 'var/cache', 'opt', 'local']:
@@ -397,4 +400,13 @@ if __name__ == '__main__':
         install_csdms_stack(dir)
         install_wmt_exe(dir)
 
+    end = datetime.now()
+
     status('Finished')
+
+    status('Summary')
+
+    print 'Started: %s' % start
+    print 'Finished: %s' % end
+    print 'Build time: %d seconds' % (end - start).total_seconds()
+    print 'Build platform: %s' % sysconfig.get_platform()
