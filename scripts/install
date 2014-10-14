@@ -285,12 +285,15 @@ def download_miniconda(dest, cache='.'):
     return os.path.abspath(dest)
 
 
-def set_build_environ(keep=['HOME'], env=None):
+def set_build_environ(keep=['HOME', 'USER'], env=None):
+    import getpass
+
     for key in os.environ.keys():
         if key not in keep:
             del os.environ[key]
     os.environ.update(env)
     os.environ.setdefault('HOME', os.path.expanduser('~'))
+    os.environ.setdefault('USER', getpass.getuser())
 
 
 def install_python(prefix, dir='.'):
