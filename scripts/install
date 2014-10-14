@@ -3,7 +3,7 @@ import os
 import subprocess
 import shutil
 import urllib2
-import sysconfig
+import platform
 from datetime import datetime
 from distutils.dir_util import mkpath
 
@@ -11,6 +11,14 @@ from distutils.dir_util import mkpath
 BUILD_ENVIRON = {
     'PATH': os.pathsep.join(['/usr/bin', '/bin', '/usr/sbin', '/sbin',
                              '/etc', '/usr/lib']),
+}
+
+MAC_OS_NAME = {
+    '10.6': 'Snow Leopard',
+    '10.7': 'Lion',
+    '10.8': 'Mountain Lion',
+    '10.9': 'Mavericks',
+    '10.10': 'Yosemite',
 }
 
 
@@ -152,7 +160,7 @@ def brew(formula, brew=None, taps=[], args=[]):
 
 
 def is_linux_os():
-    return sysconfig.get_platform().startswith('linux')
+    return platform.system() == 'Linux'
 
 
 def status(message):
@@ -171,9 +179,14 @@ def create_and_prepend_path(var, path):
     prepend_path(var, path)
 
 
-def python_version(python):
-    return subprocess.check_output(
-        [python, '-c', 'import sys; print(sys.version[:3])']).strip()
+def python_version(python, micro=False):
+    ver = subprocess.check_output(
+            [python, '-c',
+             'import platform; print(platform.python_version())']).strip()
+    if micro:
+        return ver
+    else:
+        return '.'.join(ver.split('.')[:2])
 
 
 def python_site_packages(python):
@@ -330,6 +343,22 @@ def install_python(prefix, dir='.'):
     return os.path.join(env_bindir, 'python')
 
 
+def print_summary(start, end):
+    print 'Started: %s' % start
+    print 'Finished: %s' % end
+    print 'Build time: %d seconds' % (end - start).total_seconds()
+
+    print 'Build system: %s' % platform.system()
+    if platform.system() == 'Darwin':
+        ver = platform.mac_ver()[0]
+        major_minor = '.'.join(ver.split('.')[:2])
+        print 'Mac OSX: %s (%s)' % (ver, MAC_OS_NAME[major_minor])
+    else:
+        print 'Linux distribution: %s' % '-'.join(platform.linux_distribution())
+    print 'Python version: %s' % python_version(which_python(), micro=True)
+
+
+
 if __name__ == '__main__':
     import argparse
 
@@ -403,10 +432,5 @@ if __name__ == '__main__':
     end = datetime.now()
 
     status('Finished')
-
     status('Summary')
-
-    print 'Started: %s' % start
-    print 'Finished: %s' % end
-    print 'Build time: %d seconds' % (end - start).total_seconds()
-    print 'Build platform: %s' % sysconfig.get_platform()
+    print_summary(start, end)
