@@ -149,13 +149,21 @@ def git_clone_or_update(url, dir='.'):
         git_clone(url, dir=dir)
 
 
+def brew_taps(brew):
+    try:
+        taps = subprocess.check_output([brew, 'tap']).split()
+    except subprocess.CalledProcessError:
+        return []
+    else:
+        return taps
+
+
 def brew(formula, brew=None, taps=[], args=[]):
     brew = brew or which('brew')
 
-    print 'ruby = %s' % which('ruby')
     prepend_path('PATH', os.path.dirname(which('ruby')))
 
-    for tap in taps:
+    for tap in set(taps) - set(brew_taps(brew)):
         system([brew, 'tap', tap])
     system([brew, 'install', formula] + args)
 
