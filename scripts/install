@@ -152,6 +152,7 @@ def git_clone_or_update(url, dir='.'):
 def brew(formula, brew=None, taps=[], args=[]):
     brew = brew or which('brew')
 
+    print 'ruby = %s' % which('ruby')
     prepend_path('PATH', os.path.dirname(which('ruby')))
 
     for tap in taps:
@@ -168,10 +169,21 @@ def status(message):
 
 
 def prepend_path(var, path):
-    if var in os.environ:
-        os.environ[var] = os.pathsep.join([path, os.environ[var]])
+    path = os.path.normpath(path)
+
+    try:
+        paths = os.environ[var].split(os.pathsep)
+    except KeyError:
+        paths = []
     else:
-        os.environ[var] = path
+        paths = [os.path.normpath(p) for p in paths]
+
+    try:
+        paths.remove(path)
+    except ValueError:
+        pass
+
+    os.environ[var] = os.pathsep.join([path] + paths)
 
 
 def create_and_prepend_path(var, path):
@@ -247,9 +259,6 @@ def install_wmt_exe(prefix, dir='.'):
 
 
 def install_csdms_stack(prefix):
-
-    #prepend_path('PATH', os.path.join(prefix, 'bin'))
-    #prepend_path('LD_LIBRARY_PATH', os.path.join(prefix, 'lib'))
 
     args = ['--HEAD', '-v']
     if is_linux_os():
@@ -356,7 +365,9 @@ def print_summary(start, end):
     else:
         print 'Linux distribution: %s' % '-'.join(platform.linux_distribution())
     print 'Python version: %s' % python_version(which_python(), micro=True)
-
+    print 'Build environment:'
+    for item in os.environ.items():
+        print '- %s: %s' % item
 
 
 if __name__ == '__main__':
