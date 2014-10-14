@@ -232,6 +232,8 @@ def install_homebrew(prefix, dir='.'):
 
     brew = os.path.join(prefix, dir, 'bin', 'brew')
 
+    system([brew, 'update'])
+
     return os.path.abspath(brew)
 
 
