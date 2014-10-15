@@ -269,19 +269,26 @@ def install_wmt_exe(prefix, dir='.'):
 
 
 def install_csdms_stack(prefix):
-    args = []
-    if is_linux_os():
-        args += ['--with-java=%s' % which('java'),
-                 '--with-python=%s' % which('python')]
-
     taps = ['csdms/tools', 'csdms/models', ]
     if is_linux_os():
         taps.append('csdms/dupes')
 
-    brew('babel', taps=taps, args=args)
-    brew('cca-spec-babel')
-    brew('bocca', args=['--with-python=%s' % which('python')])
-    brew('boccatools', args=['--with-python=%s' % which('python')])
+    if is_linux_os():
+        brew('csdms/dupes/netcdf', args=['--enable-fortran'])
+    else:
+        brew('homebrew/science/netcdf', args=['--enable-fortran'])
+
+    if is_linux_os():
+        brew('csdms/tools/babel', taps=taps,
+             args=['--with-java=%s' % which('java'),
+                   '--with-python=%s' % which('python')])
+    else:
+        brew('csdms/tools/babel', taps=taps,
+             args=['--with-python=%s' % which('python')])
+
+    brew('csdms/tools/cca-spec-babel')
+    brew('csdms/tools/bocca', args=['--with-python=%s' % which('python')])
+    brew('csdms/tools/boccatools', args=['--with-python=%s' % which('python')])
 
     brew('csdms/models/child')
     brew('csdms/models/hydrotrend')
