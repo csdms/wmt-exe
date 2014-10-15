@@ -269,8 +269,7 @@ def install_wmt_exe(prefix, dir='.'):
 
 
 def install_csdms_stack(prefix):
-
-    args = ['--HEAD', '-v']
+    args = []
     if is_linux_os():
         args += ['--with-java=%s' % which('java'),
                  '--with-python=%s' % which('python')]
@@ -278,7 +277,18 @@ def install_csdms_stack(prefix):
     taps = ['csdms/tools', 'csdms/models', ]
     if is_linux_os():
         taps.append('csdms/dupes')
-    brew('cmi', taps=taps, args=args)
+
+    brew('babel', taps=taps, args=args)
+    brew('cca-spec-babel')
+    brew('bocca', args=['--with-python=%s' % which('python')])
+    brew('boccatools', args=['--with-python=%s' % which('python')])
+
+    brew('csdms/models/child')
+    brew('csdms/models/hydrotrend')
+    brew('csdms/models/sedflux', args=['--HEAD'])
+    brew('csdms/models/cem', args=['--HEAD'])
+
+    brew('csdms/tools/cmi', args=['--HEAD'])
 
 
 def checksum_matches(path, md5):
@@ -327,6 +337,8 @@ def set_build_environ(keep=['HOME', 'USER'], env=None):
     os.environ.update(env)
     os.environ.setdefault('HOME', os.path.expanduser('~'))
     os.environ.setdefault('USER', getpass.getuser())
+
+    prepend_path('PATH', os.path.dirname(which('ruby')))
 
 
 def install_python(prefix, dir='.'):
