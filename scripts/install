@@ -158,13 +158,20 @@ def brew_taps(brew):
         return taps
 
 
+def brew_tap(taps, brew=None):
+    brew = brew or which('brew')
+
+    tapped = brew_taps(brew)
+    for tap in set(taps) - set(tapped):
+        system([brew, 'tap', tap])
+
+
 def brew(formula, brew=None, taps=[], args=[]):
     brew = brew or which('brew')
 
     prepend_path('PATH', os.path.dirname(which('ruby')))
 
-    for tap in set(taps) - set(brew_taps(brew)):
-        system([brew, 'tap', tap])
+    brew_tap(taps)
     system([brew, 'install', formula] + args)
 
 
@@ -269,9 +276,10 @@ def install_wmt_exe(prefix, dir='.'):
 
 
 def install_csdms_stack(prefix):
-    taps = ['csdms/tools', 'csdms/models', ]
+    taps = ['csdms/tools', 'csdms/models', 'homebrew/science']
     if is_linux_os():
         taps.append('csdms/dupes')
+    brew_tap(taps)
 
     if is_linux_os():
         brew('csdms/dupes/netcdf', args=['--enable-fortran'])
@@ -281,10 +289,10 @@ def install_csdms_stack(prefix):
     opt_with_python = '--with-python=%s' % which('python')
 
     if is_linux_os():
-        brew('csdms/tools/babel', taps=taps,
+        brew('csdms/tools/babel',
              args=['--with-java=%s' % which('java'), opt_with_python])
     else:
-        brew('csdms/tools/babel', taps=taps, args=[opt_with_python])
+        brew('csdms/tools/babel', args=[opt_with_python])
 
     brew('csdms/tools/cca-spec-babel')
     brew('csdms/tools/bocca', args=[opt_with_python])
