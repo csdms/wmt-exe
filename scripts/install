@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import os
+import sys
 import subprocess
 import shutil
 import urllib2
@@ -20,6 +21,16 @@ MAC_OS_NAME = {
     '10.9': 'Mavericks',
     '10.10': 'Yosemite',
 }
+
+
+def check_output(*args, **kwds):
+    kwds.setdefault('stdout', subprocess.PIPE)
+    return subprocess.Popen(*args, **kwds).communicate()[0]
+
+
+def total_seconds(dt):
+    return (dt.microseconds +
+            (dt.seconds + dt.days * 24 * 3600.) * 1e6) / 1e6
 
 
 def miniconda_url(version='3.7.0', python='', url=None):
@@ -54,8 +65,8 @@ def which(prog, env=None):
     prog = os.environ.get(env or prog.upper(), prog)
 
     try:
-        prog = subprocess.check_output(['which', prog],
-                                       stderr=open('/dev/null', 'w')).strip()
+        prog = check_output(['which', prog],
+                            stderr=open('/dev/null', 'w')).strip()
     except subprocess.CalledProcessError:
         return None
     else:
@@ -87,7 +98,7 @@ def which_java():
 
 
 def gcc_version():
-    version_s = subprocess.check_output([which_cc(), '-dumpversion']).strip()
+    version_s = check_output([which_cc(), '-dumpversion']).strip()
     (major, minor, micro) = version_s.split('.')
     return '%s.%s' % (major, minor)
 
@@ -106,7 +117,7 @@ def system(*args, **kwds):
     if verbose:
         call = subprocess.check_call
     else:
-        call = subprocess.check_output
+        call = check_output
 
     try:
         call(*args, **kwds)
@@ -151,7 +162,7 @@ def git_clone_or_update(url, dir='.'):
 
 def brew_taps(brew):
     try:
-        taps = subprocess.check_output([brew, 'tap']).split()
+        taps = check_output([brew, 'tap']).split()
     except subprocess.CalledProcessError:
         return []
     else:
@@ -207,7 +218,7 @@ def create_and_prepend_path(var, path):
 
 
 def python_version(python, micro=False):
-    ver = subprocess.check_output(
+    ver = check_output(
             [python, '-c',
              'import platform; print(platform.python_version())']).strip()
     if micro:
@@ -319,6 +330,9 @@ def install_csdms_stack(prefix):
 def checksum_matches(path, md5):
     import hashlib
 
+    if md5 is None:
+        return False
+
     hasher = hashlib.md5()
     with open(path, 'r') as contents:
         hasher.update(contents.read())
@@ -327,21 +341,41 @@ def checksum_matches(path, md5):
 
 
 def download_miniconda(dest, cache='.'):
+    return download_url(miniconda_url(), dest, cache=cache,
+                        md5='2656c37fd8a1a384650d7f09407a0893')
+
+
+def download_argparse(dest, cache='.'):
+    url = 'https://argparse.googlecode.com/hg/argparse.py'
+    md5 = None
+
+    return download_url(url, dest, cache=cache, md5=md5)
+
+
+def install_argparse():
+    import tempfile
+    tmp_dir = tempfile.mkdtemp(prefix='wmt', suffix='.d')
+    download_argparse('argparse.py', cache=tmp_dir)
+    print tmp_dir
+    return tmp_dir
+
+
+def download_url(url, dest, md5=None, cache='.'):
     md5 = '2656c37fd8a1a384650d7f09407a0893'
 
     dest = os.path.abspath(os.path.join(cache, dest))
 
     if os.path.exists(dest):
-        if checksum_matches(dest, '2656c37fd8a1a384650d7f09407a0893'):
-            status('md5 %s' % miniconda_url())
+        if checksum_matches(dest, md5):
+            status('md5 %s' % url)
             return dest
         else:
             os.remove(dest)
 
-    status('Fetching %s' % miniconda_url())
+    status('Fetching %s' % url)
 
     try:
-        response = urllib2.urlopen(miniconda_url())
+        response = urllib2.urlopen(url)
     except urllib2.HTTPError as error:
         raise
     except urllib2.URLError as error:
@@ -351,6 +385,7 @@ def download_miniconda(dest, cache='.'):
             shutil.copyfileobj(response, destination)
 
     return os.path.abspath(dest)
+
 
 
 def set_build_environ(keep=['HOME', 'USER', 'TERM'], env=None):
@@ -405,7 +440,7 @@ def install_python(prefix, dir='.'):
 def print_summary(start, end):
     print 'Started: %s' % start
     print 'Finished: %s' % end
-    print 'Build time: %d seconds' % (end - start).total_seconds()
+    print 'Build time: %d seconds' % total_seconds(end - start)
 
     print 'Build system: %s' % platform.system()
     if platform.system() == 'Darwin':
@@ -421,7 +456,17 @@ def print_summary(start, end):
 
 
 if __name__ == '__main__':
-    import argparse
+    try:
+        import argparse
+    except ImportError:
+        tmp = install_argparse()
+        sys.path.append(tmp)
+        try:
+            import argparse
+        except ImportError:
+            raise
+        finally:
+            shutil.rmtree(tmp)
 
     git = which('git')
     cc = which('gcc', env='CC')
