@@ -249,6 +249,9 @@ def install_homebrew(prefix, dir='.'):
 
     system([brew, 'update'])
 
+    prepend_path('PATH', os.path.join(prefix, dir, 'bin'))
+    prepend_path('LD_LIBRARY_PATH', os.path.join(prefix, dir, 'lib'))
+
     return os.path.abspath(brew)
 
 
@@ -303,12 +306,13 @@ def install_csdms_stack(prefix):
     brew('csdms/models/sedflux', args=['--HEAD'])
     brew('csdms/models/cem', args=['--HEAD'])
 
+    brew('csdms/tools/esmf')
     if is_linux_os():
-        brew('csdms/tools/esmf', args=['--with-esmpy', opt_with_python])
+        brew('csdms/tools/esmpy', args=[opt_with_python])
     else:
-        brew('csdms/tools/esmf', args=['--with-esmpy'])
+        brew('csdms/tools/esmpy')
 
-    brew('csdms/tools/coupling', args=[opt_with_python])
+    brew('csdms/tools/coupling', args=[opt_with_python, '-v'])
     brew('csdms/tools/cmi', args=['--HEAD'])
 
 
