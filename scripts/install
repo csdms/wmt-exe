@@ -318,7 +318,7 @@ def download_miniconda(dest, cache='.'):
     return os.path.abspath(dest)
 
 
-def set_build_environ(keep=['HOME', 'USER'], env=None):
+def set_build_environ(keep=['HOME', 'USER', 'TERM'], env=None):
     import getpass
 
     for key in os.environ.keys():
@@ -327,6 +327,7 @@ def set_build_environ(keep=['HOME', 'USER'], env=None):
     os.environ.update(env)
     os.environ.setdefault('HOME', os.path.expanduser('~'))
     os.environ.setdefault('USER', getpass.getuser())
+    os.environ.setdefault('TERM', 'xterm-256color')
 
 
 def install_python(prefix, dir='.'):
