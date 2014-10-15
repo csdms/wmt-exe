@@ -278,23 +278,29 @@ def install_csdms_stack(prefix):
     else:
         brew('homebrew/science/netcdf', args=['--enable-fortran'])
 
+    opt_with_python = '--with-python=%s' % which('python')
+
     if is_linux_os():
         brew('csdms/tools/babel', taps=taps,
-             args=['--with-java=%s' % which('java'),
-                   '--with-python=%s' % which('python')])
+             args=['--with-java=%s' % which('java'), opt_with_python])
     else:
-        brew('csdms/tools/babel', taps=taps,
-             args=['--with-python=%s' % which('python')])
+        brew('csdms/tools/babel', taps=taps, args=[opt_with_python])
 
     brew('csdms/tools/cca-spec-babel')
-    brew('csdms/tools/bocca', args=['--with-python=%s' % which('python')])
-    brew('csdms/tools/boccatools', args=['--with-python=%s' % which('python')])
+    brew('csdms/tools/bocca', args=[opt_with_python])
+    brew('csdms/tools/boccatools', args=[opt_with_python])
 
     brew('csdms/models/child')
     brew('csdms/models/hydrotrend')
     brew('csdms/models/sedflux', args=['--HEAD'])
     brew('csdms/models/cem', args=['--HEAD'])
 
+    if is_linux_os():
+        brew('csdms/tools/esmf', args=['--with-esmpy', opt_with_python])
+    else:
+        brew('csdms/tools/esmf', args=['--with-esmpy'])
+
+    brew('csdms/tools/coupling', args=[opt_with_python])
     brew('csdms/tools/cmi', args=['--HEAD'])
 
 
@@ -371,8 +377,10 @@ def install_python(prefix, dir='.'):
             system([conda, 'update', 'conda'])
 
         if not os.path.isdir(env_bindir):
-            requirements = ['python=2.7', 'numpy', 'scipy', 'setuptools']
-            system([conda, 'create', '-n', 'wmt'] + requirements)
+            system([conda, 'create', '-n', 'wmt', 'python=2.7'])
+
+        system([conda, 'install', '-n', 'wmt',
+                'numpy', 'scipy', 'setuptools', 'netcdf4'])
 
         system([conda, 'update', '-n', 'wmt', '--all'])
 
