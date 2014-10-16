@@ -429,7 +429,7 @@ def install_python(prefix, dir='.'):
 
         system([conda, 'install', '-n', 'wmt',
                 'numpy', 'scipy', 'setuptools', 'netcdf4', 'shapely',
-                'pyyaml', 'nose>=1.3'])
+                'pyyaml', 'nose>=1.3', 'requests'])
 
         system([conda, 'update', '-n', 'wmt', '--all'])
 
