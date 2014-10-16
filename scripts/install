@@ -275,6 +275,7 @@ def install_csdms_stack(prefix):
 
     if is_linux_os():
         brew('csdms/dupes/netcdf', args=['--enable-fortran'])
+        brew('csdms/dupes/cmake')
     else:
         brew('homebrew/science/netcdf', args=['--enable-fortran'])
 
