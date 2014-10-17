@@ -46,6 +46,7 @@ setup(
         'console_scripts': [
             'wmt-slave=wmtexe.cmd.slave:main',
             'wmt-exe=wmtexe.cmd.exe:main',
+            'wmt-get=wmtexe.cmd.get:main',
             'wmt-audit=wmtexe.cmd.audit:main',
             'wmt-activate=wmtexe.cmd.activate:main',
             'wmt-script=wmtexe.cmd.script:main',
