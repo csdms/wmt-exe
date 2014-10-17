@@ -277,16 +277,18 @@ def install_wmt_exe(prefix, dir='.'):
 
         system([
             which_python(), 'setup.py', 'configure',
-            '--wmt-prefix=%s' % prefix,
-            '--components-prefix=%s' % prefix,
+            '--wmt-prefix=%s' % os.path.join(prefix, 'local'),
+            '--components-prefix=%s' % os.path.join(prefix, 'local'),
             '--clobber',
         ])
-        system([which_python(), 'setup.py', 'develop'])
+        system([which_python(), 'setup.py', 'develop', '--prefix=%s' % prefix])
 
         etcdir = os.path.join(prefix, 'etc')
         mkpath(etcdir)
 
-        shutil.copy('wmt.cfg', etcdir)
+        ln_s('scripts/activate', os.path.join(prefix, 'bin', 'activate'))
+        ln_s('scripts/deactivate', os.path.join(prefix, 'bin', 'deactivate'))
+        ln_s('wmt.cfg', os.path.join(prefix, 'etc', 'wmt.cfg'))
 
 
 def install_csdms_stack(prefix):
