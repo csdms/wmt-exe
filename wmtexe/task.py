@@ -14,11 +14,11 @@ register_component_classes([
     'csdms.model.Sedflux3d.Sedflux3d',
     'csdms.model.Child.Child',
     'csdms.model.Hydrotrend.Hydrotrend',
-    #'csdms.model.Plume.Plume',
-    #'csdms.model.Avulsion.Avulsion',
-    #'csdms.model.Cem.Cem',
-    #'csdms.model.Waves.Waves',
-    #'cmt.services.constant.constant.River',
+    'csdms.model.Plume.Plume',
+    'csdms.model.Avulsion.Avulsion',
+    'csdms.model.Cem.Cem',
+    'csdms.model.Waves.Waves',
+    'cmt.services.constant.constant.River',
 ])
 
 
