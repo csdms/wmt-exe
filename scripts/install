@@ -281,7 +281,8 @@ def install_wmt_exe(prefix, dir='.'):
             '--components-prefix=%s' % os.path.join(prefix, 'local'),
             '--clobber',
         ])
-        system([which_python(), 'setup.py', 'develop', '--script-dir=%s' % prefix])
+        system([which_python(), 'setup.py', 'develop',
+                '--script-dir=%s' % os.path.join(prefix, 'bin')])
 
         etcdir = os.path.join(prefix, 'etc')
         mkpath(etcdir)
