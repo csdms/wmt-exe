@@ -25,10 +25,11 @@ get_abs_filename() {
     echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 }
 
-#"$_THIS_DIR/wmt-activate" "$@"
-"$_THIS_DIR/wmt-activate" "$_THIS_DIR/../etc/wmt.cfg" > /dev/null
+_NEW_ENV=$("$_THIS_DIR/wmt-activate" "$_THIS_DIR/../etc/wmt.cfg" \
+  "--prepend-base=$_THIS_DIR/.." \
+  "--prepend-base=$_THIS_DIR/../local")
 if (( $? == 0 )); then
-    eval $("$_THIS_DIR/wmt-activate" "$_THIS_DIR/../etc/wmt.cfg" "--prepend-base=$_THIS_DIR/.." "--prepend-base=$_THIS_DIR/../local")
+    eval "$_NEW_ENV"
 else
     return $?
 fi

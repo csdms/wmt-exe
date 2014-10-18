@@ -20,9 +20,9 @@ else
 fi
 _THIS_DIR=$(dirname "$_SCRIPT_LOCATION")
 
-"$_THIS_DIR/wmt-deactivate"
+_NEW_ENV=$("$_THIS_DIR/wmt-deactivate")
 if (( $? == 0 )); then
-    eval $("$_THIS_DIR/wmt-deactivate")
+    eval "$_NEW_ENV"
 else
     return $?
 fi
