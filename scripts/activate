@@ -20,16 +20,39 @@ else
 fi
 _THIS_DIR=$(dirname "$_SCRIPT_LOCATION")
 
+if [[ -n "$WMT_ENV" ]]; then
+    _NEW_ENV=$("$_THIS_DIR/wmt-deactivate")
+    if (( $? == 0 )); then
+        eval "$_NEW_ENV"
+        if [[ -n "$WMT_OLD_PS1" ]]; then
+            PS1="$WMT_OLD_PS1"
+            unset WMT_OLD_PS1
+        fi
+    else
+        return $?
+    fi
+    unset WMT_ENV
+fi
+
 # http://stackoverflow.com/a/21188136/161801
 get_abs_filename() {
     echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 }
+
+FILE=$(get_abs_filename "$_THIS_DIR")
+#WMT_ENV=$(basename $(dirname $FILE))
+WMT_ENV=$(dirname $FILE)
 
 _NEW_ENV=$("$_THIS_DIR/wmt-activate" "$_THIS_DIR/../etc/wmt.cfg" \
   "--prepend-base=$_THIS_DIR/.." \
   "--prepend-base=$_THIS_DIR/../local")
 if (( $? == 0 )); then
     eval "$_NEW_ENV"
+    if [[ -n "$WMT_CHANGE_PS1" ]]; then
+        WMT_OLD_PS1="$PS1"
+        PS1="(\e[35;1m\]csdms-$WMT_ENV\e[0m\])\n$PS1"
+    fi
+    export WMT_ENV
 else
     return $?
 fi

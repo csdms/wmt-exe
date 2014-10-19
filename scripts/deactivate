@@ -23,6 +23,11 @@ _THIS_DIR=$(dirname "$_SCRIPT_LOCATION")
 _NEW_ENV=$("$_THIS_DIR/wmt-deactivate")
 if (( $? == 0 )); then
     eval "$_NEW_ENV"
+    if [[ -n "$WMT_CHANGE_PS1" ]]; then
+        PS1="$WMT_OLD_PS1"
+        unset WMT_OLD_PS1
+    fi
+    unset WMT_ENV
 else
     return $?
 fi
