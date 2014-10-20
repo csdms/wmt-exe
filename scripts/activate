@@ -18,7 +18,13 @@ else
     echo "Only bash and zsh are supported"
     return 1
 fi
-_THIS_DIR=$(dirname "$_SCRIPT_LOCATION")
+
+# http://stackoverflow.com/a/21188136/161801
+get_abs_filename() {
+    echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+}
+
+_THIS_DIR=$(get_abs_filename $(dirname "$_SCRIPT_LOCATION"))
 
 if [[ -n "$WMT_ENV" ]]; then
     _NEW_ENV=$("$_THIS_DIR/wmt-deactivate")
@@ -34,14 +40,7 @@ if [[ -n "$WMT_ENV" ]]; then
     unset WMT_ENV
 fi
 
-# http://stackoverflow.com/a/21188136/161801
-get_abs_filename() {
-    echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
-}
-
-FILE=$(get_abs_filename "$_THIS_DIR")
-#WMT_ENV=$(basename $(dirname $FILE))
-WMT_ENV=$(dirname $FILE)
+WMT_ENV=$(dirname "$_THIS_DIR")
 
 _NEW_ENV=$("$_THIS_DIR/wmt-activate" "$_THIS_DIR/../etc/wmt.cfg" \
   "--prepend-base=$_THIS_DIR/.." \
