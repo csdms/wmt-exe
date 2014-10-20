@@ -22,7 +22,7 @@ _VAR_NAMES = ['TAIL', 'CURL', 'BASH']
 
 
 def prepend_path(var, path, out=None):
-    path = os.path.normpath(path)
+    path = os.path.abspath(path)
 
     env = out or os.environ
     try:
@@ -30,7 +30,7 @@ def prepend_path(var, path, out=None):
     except KeyError:
         paths = []
     else:
-        paths = [os.path.normpath(p) for p in paths]
+        paths = [os.path.abspath(p) for p in paths]
 
     try:
         paths.remove(path)
