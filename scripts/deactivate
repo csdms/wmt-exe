@@ -18,6 +18,11 @@ else
     echo "Only bash and zsh are supported"
     return 1
 fi
+
+if [[ ! -n "$WMT_ENV" ]]; then
+  return 0
+fi
+
 _THIS_DIR=$(dirname "$_SCRIPT_LOCATION")
 
 _NEW_ENV=$("$_THIS_DIR/wmt-deactivate")
