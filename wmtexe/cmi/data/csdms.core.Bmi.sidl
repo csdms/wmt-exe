@@ -1,0 +1,69 @@
+// DO-NOT-DELETE bocca.splicer.begin(csdms.comment)
+
+// Insert-UserCode-Here {csdms.comment} (Insert your package comments here)
+// DO-NOT-DELETE bocca.splicer.end(csdms.comment)
+package csdms version 0.0 {
+
+    // DO-NOT-DELETE bocca.splicer.begin(csdms.core.comment)
+    
+// Insert-UserCode-Here {csdms.core.comment} (Insert your package comments here)
+    // DO-NOT-DELETE bocca.splicer.end(csdms.core.comment)
+    package core {
+
+        // DO-NOT-DELETE bocca.splicer.begin(csdms.core.Bmi.comment)
+        
+// Insert-UserCode-Here {csdms.core.Bmi.comment} (Insert your interface comments here)
+        // DO-NOT-DELETE bocca.splicer.end(csdms.core.Bmi.comment)
+        interface Bmi
+        {
+            // DO-NOT-DELETE bocca.splicer.begin(csdms.core.Bmi.methods)
+            
+// Insert-UserCode-Here {csdms.core.Bmi.methods} (Insert your interface methods here)
+            bool initialize(in string config_file);	            	
+            bool update(in double time_interval);	            	
+            bool finalize();	            	
+            
+            double get_start_time();	            	
+            double get_current_time();	            	
+            double get_end_time();	            	
+
+            //array<> get_values(in string long_var_name);	            	
+            //void set_values(in string long_var_name, in array<> in_values);	            	
+
+            string get_component_name();	            	
+            int get_input_item_count();	            	
+            array<string> get_input_item_list();	            	
+
+            int get_output_item_count();	            	
+            array<string> get_output_item_list();	            	
+
+            //array<> get_values_at_indices(in string long_var_name, in array<int> indices);	            	
+            //void set_values_at_indices(in string long_var_name, in array<int> indices, in array<> in_values);	            	
+
+            // Grid information
+            int get_grid_rank(in string long_var_name);	            	
+
+            // Uniform rectilinear
+            array<double, 1> get_grid_spacing(in string long_var_name);	            	
+            array<double, 1> get_grid_origin(in string long_var_name);	            	
+            array<int, 1> get_grid_shape(in string long_var_name);	            	
+
+            // Non-uniform rectilinear, curvilinear
+            array<double, 1> get_grid_x(in string long_var_name);	            	
+            array<double, 1> get_grid_y(in string long_var_name);	            	
+            array<double, 1> get_grid_z(in string long_var_name);	            	
+
+            // Unstructured
+            array<int, 1> get_grid_connectivity(in string long_var_name);
+            array<int, 1> get_grid_offset(in string long_var_name);
+            
+            //array<double, 1> get_grid_values(in string long_var_name);
+            //array<double, 1> get_grid_values(in string long_var_name,
+            //                                 inout array<> values);
+            array<> get_grid_values(in string long_var_name, in array<> values);
+            void set_grid_values(in string long_var_name, in array<double, 1> vals);	            	
+
+            // DO-NOT-DELETE bocca.splicer.end(csdms.core.Bmi.methods)
+        }
+    }
+}

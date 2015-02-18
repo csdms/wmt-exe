@@ -1,0 +1,21 @@
+# .csdms.examples.cxx.Heat.IMPLHDRS dependencies.
+csdms_examples_cxx_Heat_Impl.hxx:                                             \
+  /Users/huttone/git/bocca-tools/bocca/csdms/components/sidl/csdms.examples.cxx.Heat.sidl
+csdms_examples_cxx_Heat_Impl.hxx: sidl_cxx.hxx
+csdms_examples_cxx_Heat_Impl.hxx: csdms_examples_cxx_Heat_IOR.h
+csdms_examples_cxx_Heat_Impl.hxx: csdms_core_Bmi.hxx
+csdms_examples_cxx_Heat_Impl.hxx: csdms_examples_cxx_Heat.hxx
+csdms_examples_cxx_Heat_Impl.hxx: sidl_BaseClass.hxx
+csdms_examples_cxx_Heat_Impl.hxx: sidl_BaseInterface.hxx
+csdms_examples_cxx_Heat_Impl.hxx: sidl_ClassInfo.hxx
+
+
+# .csdms.examples.cxx.Heat.IMPLSRCS dependencies.
+csdms_examples_cxx_Heat_Impl.cxx:                                             \
+  /Users/huttone/git/bocca-tools/bocca/csdms/components/sidl/csdms.examples.cxx.Heat.sidl
+csdms_examples_cxx_Heat_Impl.cxx: csdms_examples_cxx_Heat_Impl.hxx
+csdms_examples_cxx_Heat_Impl.cxx: sidl_BaseInterface.hxx
+csdms_examples_cxx_Heat_Impl.cxx: sidl_ClassInfo.hxx
+csdms_examples_cxx_Heat_Impl.cxx: sidl_NotImplementedException.hxx
+
+
