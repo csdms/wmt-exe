@@ -1,0 +1,3 @@
+recursive-include wmtexe data/*.sidl
+recursive-include wmtexe data/csdms.examples.c.Heat/*
+recursive-include wmtexe data/csdms.examples.cxx.Heat/*

@@ -40,7 +40,7 @@ setup(
 
     license='MIT',
 
-    packages=['wmtexe', 'wmtexe.cmd', ],
+    packages=['wmtexe', 'wmtexe.cmd', 'wmtexe.cmi'],
 
     entry_points={
         'console_scripts': [
@@ -54,6 +54,9 @@ setup(
             'wmt-script=wmtexe.cmd.script:main',
             'wmt-quickstart=wmtexe.cmd.quickstart:main',
             'wmt-info=wmtexe.cmd.info:main',
+            'cmi-make=wmtexe.cmi.make:main',
+            'cmi-dup=wmtexe.cmi.dup:main',
+            'cmi-fetch=wmtexe.cmi.fetch:main',
         ],
     },
 
