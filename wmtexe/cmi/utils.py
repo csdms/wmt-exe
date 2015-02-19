@@ -1,5 +1,8 @@
 #! /usr/bin/env python
+from __future__ import print_function
+
 import os
+import sys
 import subprocess
 import types
 import tempfile
@@ -54,7 +57,7 @@ class mktemp(object):
 
 
 def status(message):
-    print ' '.join(['==>', message])
+    print(' '.join(['==>', message]), file=sys.stderr)
 
 
 def check_output(*args, **kwds):
@@ -64,6 +67,7 @@ def check_output(*args, **kwds):
 
 def system(*args, **kwds):
     verbose = kwds.pop('verbose', True)
+    kwds.setdefault('stdout', sys.stderr)
 
     status(' '.join(args[0]))
 
