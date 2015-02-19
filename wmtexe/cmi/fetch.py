@@ -8,7 +8,7 @@ import yaml
 from distutils.dir_util import mkpath
 
 from .utils import cd, check_output, system, read_first_of
-from .git import git_repo_name, git_clone_or_update
+from .git import git_repo_name, git_clone_or_update, git_repo_sha
 
 
 def load_bmi_info(dir):
@@ -62,6 +62,9 @@ def build_api(build):
         system(['brew', 'install', brew['formula']] + opts)
 
 
+_THIS_DIR = os.path.dirname(__file__)
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser()
@@ -76,7 +79,7 @@ def main():
         'language': 'c',
         'interfaces': [{
             'name': 'csdms.core.Bmi',
-            'sidl': '/Users/huttone/git/bocca-tools/bocca/import/csdms.core.Bmi.sidl'
+            'sidl': os.path.join(_THIS_DIR, 'data', 'csdms.core.Bmi.sidl')
         }],
         'bmi': []
     }
