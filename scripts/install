@@ -360,7 +360,6 @@ def install_argparse():
     import tempfile
     tmp_dir = tempfile.mkdtemp(prefix='wmt', suffix='.d')
     download_argparse('argparse.py', cache=tmp_dir)
-    print tmp_dir
     return tmp_dir
 
 
