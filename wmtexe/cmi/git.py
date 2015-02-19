@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 import os
 
-from .utils import which, check_output, system, cd
+from .utils import which, check_output, system, cd, status
 
 
 def git_repo_name(url):
