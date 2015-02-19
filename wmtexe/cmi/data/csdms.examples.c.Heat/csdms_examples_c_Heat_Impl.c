@@ -1086,28 +1086,28 @@ impl_csdms_examples_c_Heat_get_grid_values(
         CALL_BMI(Get_var_type, this->state, long_var_name, type);
 
         if (data) { /* Create an array that borrows these values. */
-          const int _n_dims = 1;
-          const int _lower[1] = {0};
-          const int _upper[1] = {size - 1};
-          const int _stride[1] = {1};
+          const int n_dims = 1;
+          const int lower[1] = {0};
+          const int upper[1] = {size - 1};
+          const int stride[1] = {1};
 
           if (strcmp(type, "double") == 0) {
-            values = sidl_double__array_borrow(data, _n_dims,
-                _lower, _upper, _stride);
+            values = (struct sidl__array*)sidl_double__array_borrow(data, n_dims,
+                lower, upper, stride);
           } else if (strcmp(type, "int") == 0) {
-            values = sidl_int__array_borrow(data, _n_dims,
-                _lower, _upper, _stride);
+            values = (struct sidl__array*)sidl_int__array_borrow(data, n_dims,
+                lower, upper, stride);
           }
 
         } else { /* Create a new array to hold the values*/
           void * buffer = NULL;
 
           if (strcmp(type, "double") == 0) {
-            values = sidl_double__array_create1d(size);
-            buffer = sidl_double__array_first(values);
+            values = (struct sidl__array*)sidl_double__array_create1d(size);
+            buffer = (void*)sidl_double__array_first((struct sidl_double__array*)values);
           } else if (strcmp(type, "int") == 0) {
-            values = sidl_int__array_create1d(size);
-            buffer = sidl_int__array_first(values);
+            values = (struct sidl__array*)sidl_int__array_create1d(size);
+            buffer = (void*)sidl_int__array_first((struct sidl_int__array*)values);
           }
 
           if (buffer)
