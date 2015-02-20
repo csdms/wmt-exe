@@ -313,7 +313,7 @@ def create_bmi_class(name, bocca=None, language='c', bmi_mapping=None,
     try:
         bmi_mapping['defines'] = get_grid_type_defines(bmi_mapping['grids'])
     except KeyError:
-        pass
+        bmi_mapping['defines'] = ''
 
     for key in bmi_mapping.keys():
         bmi_mapping['bmi_' + key] = bmi_mapping[key]
