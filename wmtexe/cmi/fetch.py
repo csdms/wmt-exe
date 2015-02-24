@@ -26,7 +26,7 @@ def load_bmi_info(dir):
     return info
 
 
-def load_bmi_api(dir):
+def load_bmi_api(dir='.'):
     with cd(dir):
         with open(os.path.join('.bmi', 'api.yaml'), 'r') as fp:
             api = yaml.load(fp)
@@ -43,7 +43,7 @@ def load_bmi_api(dir):
     return api
 
 
-def load_build_script(dir):
+def load_build_script(dir='.'):
     with cd(dir):
         with open(os.path.join('.bmi', 'api.yaml'), 'r') as fp:
             api = yaml.load(fp)
@@ -51,15 +51,14 @@ def load_build_script(dir):
 
 
 def build_api(build):
-    try:
+    if isinstance(build, dict) and 'brew' in build:
         brew = build['brew']
-    except KeyError:
-        raise RuntimeError('only building with homebrew is supported')
-    else:
         opts = brew.get('options', [])
         if isinstance(opts, types.StringTypes):
             opts = [opts]
         system(['brew', 'install', brew['formula']] + opts)
+    else:
+        raise RuntimeError('only building with homebrew is supported')
 
 
 _THIS_DIR = os.path.dirname(__file__)
@@ -84,15 +83,22 @@ def main():
         'bmi': []
     }
     for repo in args.repo:
+        try:
+            repo, branch = repo.split(',')
+        except ValueError:
+            branch = 'master'
+
         cache_dir = os.path.join('cache', git_repo_name(repo) +
-                                 '-%s' % git_repo_sha(repo))
+                                 '-%s' % git_repo_sha(repo, branch=branch))
 
-        git_clone_or_update(repo, dir=cache_dir)
-        build_api(load_build_script(cache_dir))
+        git_clone_or_update(repo, dir=cache_dir, branch=branch)
+        with cd(cache_dir) as _:
+            build_api(load_build_script())
+            api = load_bmi_api()
 
-        api = load_bmi_api(cache_dir)
         if 'name' not in api:
             api['name'] = re.sub('-', '', os.path.basename(repo).title())
+        api['name'] = 'model.' + api['name']
 
         proj['bmi'].append(api)
 
