@@ -49,8 +49,16 @@ ${bmi_defines}
 #define _GET_PRIVATE_DATA(clazz, var) \
   struct clazz##__data *var = clazz##__get_data(self);
 
+#define _GET_PRIVATE_DATA_OR_RAISE(clazz, var) \
+  struct clazz##__data *var = clazz##__get_data(self); \
+  if (var->state == NULL) { \
+    fprintf(stderr, "Not initialized\n"); \
+    SIDL_THROW(*_ex, sidl_NotImplementedException, "Not initialized"); \
+  }
+
 #define CALL_BMI(func, ...) _CALL_BMI(${bmi_prefix}, func, __VA_ARGS__)
 #define GET_PRIVATE_DATA(var) _GET_PRIVATE_DATA(csdms_examples_c_Heat, var)
+#define GET_PRIVATE_DATA_OR_RAISE(var) _GET_PRIVATE_DATA_OR_RAISE(csdms_examples_c_Heat, var)
 
 /* DO-NOT-DELETE splicer.end(csdms.examples.c.Heat._hincludes) */
 

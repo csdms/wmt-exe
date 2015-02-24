@@ -283,7 +283,7 @@ impl_csdms_examples_c_Heat_update(
   *_ex = 0;
   {
     /* DO-NOT-DELETE splicer.begin(csdms.examples.c.Heat.update) */
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
     CALL_BMI(Update_until, this->state, time_interval);
     return 0;
 
@@ -312,7 +312,7 @@ impl_csdms_examples_c_Heat_finalize(
   *_ex = 0;
   {
     /* DO-NOT-DELETE splicer.begin(csdms.examples.c.Heat.finalize) */
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
     CALL_BMI(Finalize, this->state);
     return 0;
   EXIT:;
@@ -339,7 +339,7 @@ impl_csdms_examples_c_Heat_get_start_time(
   *_ex = 0;
   {
     /* DO-NOT-DELETE splicer.begin(csdms.examples.c.Heat.get_start_time) */
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
     double time;
 
     CALL_BMI(Get_start_time, this->state, &time);
@@ -369,7 +369,7 @@ impl_csdms_examples_c_Heat_get_current_time(
   *_ex = 0;
   {
     /* DO-NOT-DELETE splicer.begin(csdms.examples.c.Heat.get_current_time) */
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
     double time;
 
     CALL_BMI(Get_current_time, this->state, &time);
@@ -399,7 +399,7 @@ impl_csdms_examples_c_Heat_get_end_time(
   *_ex = 0;
   {
     /* DO-NOT-DELETE splicer.begin(csdms.examples.c.Heat.get_end_time) */
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
     double time;
 
     CALL_BMI(Get_end_time, this->state, &time);
@@ -495,7 +495,7 @@ impl_csdms_examples_c_Heat_get_component_name(
   *_ex = 0;
   {
     /* DO-NOT-DELETE splicer.begin(csdms.examples.c.Heat.get_component_name) */
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
     char *name = (char*)malloc(sizeof(char) * 2048);
 
     CALL_BMI(Get_component_name, this->state, name);
@@ -526,7 +526,7 @@ impl_csdms_examples_c_Heat_get_input_item_count(
   *_ex = 0;
   {
     /* DO-NOT-DELETE splicer.begin(csdms.examples.c.Heat.get_input_item_count) */
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
     int number_of_names = 0;
     CALL_BMI(Get_input_var_name_count, this->state, &number_of_names);
     return number_of_names;
@@ -560,7 +560,7 @@ impl_csdms_examples_c_Heat_get_input_item_list(
     int number_of_names = 0;
     int i;
 
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
     CALL_BMI(Get_input_var_name_count, this->state, &number_of_names);
 
     item_names = (char**)malloc(sizeof(char*) * number_of_names);
@@ -603,7 +603,7 @@ impl_csdms_examples_c_Heat_get_output_item_count(
   *_ex = 0;
   {
     /* DO-NOT-DELETE splicer.begin(csdms.examples.c.Heat.get_output_item_count) */
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
     int number_of_names = 0;
     CALL_BMI(Get_output_var_name_count, this->state, &number_of_names);
     return number_of_names;
@@ -637,7 +637,7 @@ impl_csdms_examples_c_Heat_get_output_item_list(
     int number_of_names = 0;
     int i;
 
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
     CALL_BMI(Get_output_var_name_count, this->state, &number_of_names);
 
     item_names = (char**)malloc(sizeof(char*) * number_of_names);
@@ -750,7 +750,7 @@ impl_csdms_examples_c_Heat_get_grid_rank(
   *_ex = 0;
   {
     /* DO-NOT-DELETE splicer.begin(csdms.examples.c.Heat.get_grid_rank) */
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
 
     int rank;
     CALL_BMI(Get_var_rank, this->state, long_var_name, &rank);
@@ -785,7 +785,7 @@ impl_csdms_examples_c_Heat_get_grid_spacing(
   *_ex = 0;
   {
     /* DO-NOT-DELETE splicer.begin(csdms.examples.c.Heat.get_grid_spacing) */
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
     struct sidl_double__array* spacing = NULL;
     int rank;
 
@@ -824,7 +824,7 @@ impl_csdms_examples_c_Heat_get_grid_origin(
   *_ex = 0;
   {
     /* DO-NOT-DELETE splicer.begin(csdms.examples.c.Heat.get_grid_origin) */
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
     struct sidl_double__array* origin = NULL;
     int rank;
 
@@ -862,7 +862,7 @@ impl_csdms_examples_c_Heat_get_grid_shape(
   *_ex = 0;
   {
     /* DO-NOT-DELETE splicer.begin(csdms.examples.c.Heat.get_grid_shape) */
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
     struct sidl_int__array* shape = NULL;
     int rank;
 
@@ -1065,7 +1065,7 @@ impl_csdms_examples_c_Heat_get_grid_values(
   *_ex = 0;
   {
     /* DO-NOT-DELETE splicer.begin(csdms.examples.c.Heat.get_grid_values) */
-    GET_PRIVATE_DATA(this);
+    GET_PRIVATE_DATA_OR_RAISE(this);
 
     if (this && this->state)
     {
