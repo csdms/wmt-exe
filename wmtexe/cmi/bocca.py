@@ -320,16 +320,22 @@ def create_bmi_class(name, bocca=None, language='c', bmi_mapping=None,
 
     with mktemp(prefix='csdms', suffix='.d') as destdir:
         #impl_dir = dup_c_impl(impl, name, destdir=destdir)
-        impl_dir = dup_impl_files(impl, name, destdir=destdir)
-        replace_bmi_names(glob.glob(os.path.join(impl_dir, '*')), bmi_mapping)
+        if impl is not None:
+            impl_dir = dup_impl_files(impl, name, destdir=destdir)
+            replace_bmi_names(glob.glob(os.path.join(impl_dir, '*')),
+                              bmi_mapping)
+        else:
+            impl_dir = None
 
         create_class(name, bocca=bocca, implements='csdms.core.Bmi',
                      language=language, impl=impl_dir)
+
 
 _THIS_DIR = os.path.dirname(__file__)
 _PATH_TO_IMPL = {
     'c': os.path.join(_THIS_DIR, 'data', 'csdms.examples.c.Heat'),
     'cxx': os.path.join(_THIS_DIR, 'data', 'csdms.examples.cxx.Heat'),
+    'f90': os.path.join(_THIS_DIR, 'data', 'csdms.examples.f90.Heat'),
 }
 
 
@@ -341,7 +347,8 @@ def make_project(proj):
             create_interface(name, **interface)
 
         for clazz in proj.get('bmi', []):
-            name = 'csdms.model.%s' % clazz.pop('name')
+            name = 'csdms.%s' % clazz.pop('name')
+            #name = 'csdms.model.%s' % clazz.pop('name')
             clazz.setdefault('impl', _PATH_TO_IMPL[clazz['language']])
             create_bmi_class(name, bmi_mapping=clazz, impl=clazz['impl'],
                              language=clazz['language'])
