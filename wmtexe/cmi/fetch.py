@@ -9,6 +9,8 @@ from distutils.dir_util import mkpath
 
 from .utils import cd, check_output, system, read_first_of
 from .git import git_repo_name, git_clone_or_update, git_repo_sha
+from .project import empty_bmi_project, add_bmi_component
+from . import api
 
 
 def load_bmi_info(dir):
@@ -61,8 +63,24 @@ def build_api(build):
         raise RuntimeError('only building with homebrew is supported')
 
 
-_THIS_DIR = os.path.dirname(__file__)
+def cache_dir_from_repo(repo, branch='master'):
+    return os.path.join('cache', git_repo_name(repo) +
+                                 '-%s' % git_repo_sha(repo, branch=branch))
 
+
+def component_name_from_repo(repo, name=None):
+    name = name or re.sub('-', '', os.path.basename(repo).title())
+
+    return '.'.join(['model', name])
+
+
+def parse_repo_line(line):
+    if ',' in line:
+        repo, branch = line.split(',')
+    else:
+        repo, branch = line, 'master'
+
+    return repo.strip(), branch.strip()
 
 def main():
     import argparse
@@ -73,34 +91,21 @@ def main():
 
     args = parser.parse_args()
 
-    proj = {
-        'name': 'csdms',
-        'language': 'c',
-        'interfaces': [{
-            'name': 'csdms.core.Bmi',
-            'sidl': os.path.join(_THIS_DIR, 'data', 'csdms.core.Bmi.sidl')
-        }],
-        'bmi': []
-    }
+    proj = empty_bmi_project()
     for repo in args.repo:
-        try:
-            repo, branch = repo.split(',')
-        except ValueError:
-            branch = 'master'
+        repo, branch = parse_repo_line(repo)
 
-        cache_dir = os.path.join('cache', git_repo_name(repo) +
-                                 '-%s' % git_repo_sha(repo, branch=branch))
+        cache_dir = cache_dir_from_repo(repo, branch=branch)
 
         git_clone_or_update(repo, dir=cache_dir, branch=branch)
+
         with cd(cache_dir) as _:
-            build_api(load_build_script())
-            api = load_bmi_api()
+            bmi = api.load()
+            api.execute_api_build()
 
-        if 'name' not in api:
-            api['name'] = re.sub('-', '', os.path.basename(repo).title())
-        api['name'] = 'model.' + api['name']
+        bmi['name'] = component_name_from_repo(repo, bmi.get('name', None))
 
-        proj['bmi'].append(api)
+        add_bmi_component(proj, bmi)
 
     print yaml.dump(proj, default_flow_style=False)
 
