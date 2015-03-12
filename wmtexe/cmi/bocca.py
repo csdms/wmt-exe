@@ -31,7 +31,7 @@ def is_bocca_project(name):
 
 
 def create_project(name, bocca=None, language=None, ifexists='pass'):
-    if ifexists not in ['pass', 'raise']:
+    if ifexists not in ['pass', 'raise', 'clobber']:
         raise ValueError('ifexists value not understood')
 
     bocca = bocca or which('bocca')
@@ -41,9 +41,11 @@ def create_project(name, bocca=None, language=None, ifexists='pass'):
 
     if is_bocca_project(name):
         if ifexists == 'raise':
-            raise ValueError('project exists')
-    else:
-        system([bocca, 'create', 'project', name] + options)
+            raise ProjectExistsError('project exists')
+        elif ifexists == 'clobber':
+            shutil.rmtree(name)
+
+    system([bocca, 'create', 'project', name] + options)
 
 
 def create_interface(name, bocca=None, sidl=None):
@@ -206,10 +208,11 @@ def replace_cxx_class_names(paths, src, dest, inplace=True):
 
 def replace_bmi_names(paths, mapping):
     for path in paths:
-        with open(path, 'r') as fp:
-            contents = Template(fp.read()).safe_substitute(mapping)
-        with open(path, 'w') as fp:
-            fp.write(contents)
+        if os.path.isfile(path):
+            with open(path, 'r') as fp:
+                contents = Template(fp.read()).safe_substitute(mapping)
+            with open(path, 'w') as fp:
+                fp.write(contents)
 
 
 def copy_class(src, dest, bocca=None):
@@ -229,6 +232,29 @@ def dup_c_impl(path, new, destdir='.'):
 
     with cd(os.path.join(destdir, new)) as _:
         replace_c_class_names(impl_files, old, new, inplace=False)
+
+    return os.path.join(destdir, new)
+
+
+def dup_py_impl(path, new, destdir='.'):
+    old = os.path.basename(path)
+
+    #impl_files = (glob.glob(os.path.join(path, '*.[ch]')) +
+    #              glob.glob(os.path.join(path, 'make.*.user')))
+
+    #impl_files = []
+    shutil.copytree(path, os.path.join(destdir, new))
+
+    #with cd(path) as base:
+    #    for fname in os.listdir(path):
+    #        if not fname.startswith('.'):
+    #            if os.path.isdir(fname):
+    #                shutil.copytree(fname, os.path.join(destdir, fname))
+    #            else:
+    #                shutil.copy(fname, destdir)
+
+    #with cd(os.path.join(destdir, new)) as _:
+    #    replace_c_class_names(impl_files, old, new, inplace=False)
 
     return os.path.join(destdir, new)
 
@@ -253,8 +279,10 @@ def dup_impl_files(path, new, destdir='.', language=None):
         return dup_c_impl(path, new, destdir=destdir)
     elif language == 'cxx':
         return dup_cxx_impl(path, new, destdir=destdir)
+    elif language == 'python':
+        return dup_py_impl(path, new, destdir=destdir)
     else:
-        return None
+        raise ValueError('language not understood: %s' % language)
 
 
 def guess_language_from_files(path):
@@ -321,7 +349,8 @@ def create_bmi_class(name, bocca=None, language='c', bmi_mapping=None,
     with mktemp(prefix='csdms', suffix='.d') as destdir:
         #impl_dir = dup_c_impl(impl, name, destdir=destdir)
         if impl is not None:
-            impl_dir = dup_impl_files(impl, name, destdir=destdir)
+            impl_dir = dup_impl_files(impl, name, destdir=destdir,
+                                     language=language)
             replace_bmi_names(glob.glob(os.path.join(impl_dir, '*')),
                               bmi_mapping)
         else:
@@ -336,11 +365,17 @@ _PATH_TO_IMPL = {
     'c': os.path.join(_THIS_DIR, 'data', 'csdms.examples.c.Heat'),
     'cxx': os.path.join(_THIS_DIR, 'data', 'csdms.examples.cxx.Heat'),
     'f90': os.path.join(_THIS_DIR, 'data', 'csdms.examples.f90.Heat'),
+    'python': os.path.join(_THIS_DIR, 'data', 'csdms.examples.py.Heat'),
 }
 
 
-def make_project(proj):
-    create_project(proj['name'], language=proj['language'])
+def make_project(proj, clobber=False):
+    if clobber:
+        ifexists = 'clobber'
+    else:
+        ifexists = 'raise'
+
+    create_project(proj['name'], language=proj['language'], ifexists=ifexists)
     with cd(proj['name']) as path:
         for interface in proj.get('interfaces', []):
             name = interface.pop('name')
