@@ -128,7 +128,7 @@ def system(*args, **kwds):
 
 def ln_s(src, dst):
     if not os.path.exists(dst):
-        system(['ln', '-s', src, dst])
+        system(['ln', '-s', os.path.abspath(src), os.path.abspath(dst)])
 
 
 def git_clone(url, git=None, dir='.'):
@@ -277,16 +277,19 @@ def install_wmt_exe(prefix, dir='.'):
 
         system([
             which_python(), 'setup.py', 'configure',
-            '--wmt-prefix=%s' % prefix,
-            '--components-prefix=%s' % prefix,
+            '--wmt-prefix=%s' % os.path.join(prefix, 'local'),
+            '--components-prefix=%s' % os.path.join(prefix, 'local'),
             '--clobber',
         ])
-        system([which_python(), 'setup.py', 'develop'])
+        system([which_python(), 'setup.py', 'develop',
+                '--script-dir=%s' % os.path.join(prefix, 'bin')])
 
         etcdir = os.path.join(prefix, 'etc')
         mkpath(etcdir)
 
-        shutil.copy('wmt.cfg', etcdir)
+        ln_s('scripts/activate', os.path.join(prefix, 'bin', 'activate'))
+        ln_s('scripts/deactivate', os.path.join(prefix, 'bin', 'deactivate'))
+        ln_s('wmt.cfg', os.path.join(prefix, 'etc', 'wmt.cfg'))
 
 
 def install_csdms_stack(prefix):
@@ -294,6 +297,9 @@ def install_csdms_stack(prefix):
     if is_linux_os():
         taps.append('csdms/dupes')
     brew_tap(taps)
+
+    if which('automake') is None:
+        brew('automake')
 
     if is_linux_os():
         brew('csdms/dupes/netcdf', args=['--enable-fortran'])
@@ -313,7 +319,7 @@ def install_csdms_stack(prefix):
     brew('csdms/tools/bocca', args=[opt_with_python])
     brew('csdms/tools/boccatools', args=[opt_with_python])
 
-    brew('csdms/models/child')
+    brew('csdms/models/child', args=['--HEAD'])
     brew('csdms/models/hydrotrend')
     brew('csdms/models/sedflux', args=['--HEAD'])
     brew('csdms/models/cem', args=['--HEAD'])
@@ -325,7 +331,7 @@ def install_csdms_stack(prefix):
         brew('csdms/tools/esmpy')
 
     brew('csdms/tools/coupling', args=[opt_with_python, '-v'])
-    brew('csdms/tools/cmi', args=['--HEAD'])
+    #brew('csdms/tools/cmi', args=['--HEAD'])
 
 
 def checksum_matches(path, md5):
@@ -357,7 +363,6 @@ def install_argparse():
     import tempfile
     tmp_dir = tempfile.mkdtemp(prefix='wmt', suffix='.d')
     download_argparse('argparse.py', cache=tmp_dir)
-    print tmp_dir
     return tmp_dir
 
 
@@ -483,26 +488,30 @@ if __name__ == '__main__':
 
     parser.add_argument('--with-python', default='internal',
                          metavar='PYTHON',
-                         help='Path to Python executable [internal]')
+                         help='Path to Python executable [%(default)s]')
     parser.add_argument('--with-brew', default='internal',
                          metavar='BREW',
-                         help='Path to brew executable [internal]')
+                         help='Path to brew executable [%(default)s]')
 
     parser.add_argument('--with-git', default=git, metavar='git',
                         required=not git,
-                        help='Path to git executable [%s]' % git)
+                        help='Path to git executable [%(default)s]')
     parser.add_argument('--with-cc', default=cc,
                         metavar='cc', required=not cc,
-                        help='Path to C compiler [%s]' % cc)
+                        help='Path to C compiler [%(default)s]')
     parser.add_argument('--with-cxx', default=cxx,
                         metavar='cxx', required=not cxx,
-                        help='Path to C++ compiler [%s]' % cxx)
+                        help='Path to C++ compiler [%(default)s]')
     parser.add_argument('--with-java', default=java,
                         metavar='java', required=not java,
-                        help='Path to Java executable [%s]' % java)
+                        help='Path to Java executable [%(default)s]')
     parser.add_argument('--with-ruby', default=ruby, metavar='ruby',
                         required=not ruby,
-                        help='Path to ruby executable [%s]' % ruby)
+                        help='Path to ruby executable [%(default)s]')
+    parser.add_argument('--make-jobs', type=int, default=2,
+                        help='Number of processes to use for make [%(default)s]')
+    parser.add_argument('--brew-temp', type=str,
+                        help='Set homebrew temporary directory')
 
     args = parser.parse_args()
 
@@ -527,6 +536,10 @@ if __name__ == '__main__':
         os.environ['PYTHON'] = install_python(install_prefix)
     else:
         os.environ.setdefault('PYTHON', args.with_python)
+
+    os.environ['HOMEBREW_MAKE_JOBS'] = str(args.make_jobs)
+    if args.brew_temp:
+        os.environ['HOMEBREW_TEMP'] = args.brew_temp
 
     if args.with_brew == 'internal':
         os.environ['BREW'] = install_homebrew(install_prefix, dir='local')

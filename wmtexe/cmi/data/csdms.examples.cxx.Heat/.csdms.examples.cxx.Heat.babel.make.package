@@ -1,0 +1,8 @@
+.csdms.examples.cxx.Heat.BABEL_MAKEFILE_NAME =                                \
+  .csdms.examples.cxx.Heat.babel.make
+.csdms.examples.cxx.Heat.STUB_SRC_DIRS =                                      \
+  /Users/huttone/git/bocca-tools/bocca/csdms/components/csdms.examples.cxx.Heat/glue/
+.csdms.examples.cxx.Heat.IMPL_SRC_DIRS =                                      \
+  /Users/huttone/git/bocca-tools/bocca/csdms/components/csdms.examples.cxx.Heat/
+.csdms.examples.cxx.Heat.IOR_SRC_DIRS =                                       \
+  /Users/huttone/git/bocca-tools/bocca/csdms/components/csdms.examples.cxx.Heat/glue/

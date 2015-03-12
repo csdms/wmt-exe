@@ -51,5 +51,5 @@ def main():
         print traceback.format_exc()
     else:
         slave.report_success(
-            args.id, 'simulation is complete and available for pickup)')
+            args.id, 'simulation is complete and available for pickup')
         print 'success'
