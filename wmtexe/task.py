@@ -4,9 +4,13 @@ import tarfile
 import shutil
 import json
 import threading
+import logging
 
 from cmt.component.model import Model
 from cmt.framework.services import register_component_classes
+
+
+logger = logging.getLogger(__name__)
 
 
 register_component_classes([
@@ -154,7 +158,11 @@ def upload_run_tarball(server, tarball):
 
     #resp = subprocess.call(cmd)
     #return '{"checksum":0, "url":"http://csdms.colorado.edu/pub/users/wmt"}'
-    return subprocess.check_output(cmd)
+    try:
+        return subprocess.check_output(cmd)
+    except Exception as error:
+        logger.error(error)
+        raise
 
 
 def report_status(id, url, status, message):
@@ -174,6 +182,9 @@ class Task(object):
         self._id = id
         self._server = server
         self._curl = os.environ.get('CURL', 'curl')
+        log_file = os.path.expanduser('~/.wmt/%s.log' % self.id)
+        logging.basicConfig(filename=log_file, filemode='w',
+                            level=logging.DEBUG)
 
     @property
     def id(self):
@@ -192,15 +203,19 @@ class Task(object):
     def report(self, status, message):
         import requests
 
+        logger.info('%s: %s' % (status, message))
+
         url = os.path.join(self.server, 'run/update')
         resp = requests.post(url, data={
             'uuid': self.id,
             'status': status,
             'message': message,
         })
+
         return resp
 
     def report_with_curl(self, status, message):
+        logger.info('%s: %s' % (status, message))
         cmd = [
             self._curl, '-i', '-F',
             'uuid=%s' % self.id,
@@ -250,7 +265,7 @@ class TaskStatus(Task):
             else:
                 self.report('running', 'Time: %s days' % status)
 
-        self.report('completed', 'completed')
+        self.report('success', 'completed')
 
     def __call__(self):
         self.report_status()
@@ -277,9 +292,11 @@ class RunTask(Task):
     def setup(self):
         self.report('downloading', 'downloading simulation data')
         dest = self.download_tarball(dest_dir=self._wmt_dir)
+        self.report('downloaded', 'downloaded simulation data')
 
         self.report('unpacking', 'unpacking simulation data')
         self.unpack_tarball(dest)
+        self.report('unpacked', 'unpacked simulation data')
 
     def run(self):
         for (component, path) in components_to_run(self.sim_dir).items():
@@ -289,12 +306,15 @@ class RunTask(Task):
     def teardown(self):
         self.report('packing', 'packing simulation output')
         tarball = self.pack_tarball()
+        self.report('packed', 'packed simulation output')
 
         self.report('uploading', 'uploading simulation output')
         try:
             self.upload_tarball(tarball)
-        except:
-            pass
+        except Exception as error:
+            self.report('uploading', str(error))
+        else:
+            self.report('uploaded', 'uploaded simulation output')
 
         self.report_success('done')
 
@@ -332,7 +352,10 @@ class RunTask(Task):
 
     def upload_tarball(self, path):
         resp = upload_run_tarball(self._server, path)
-        self._result = json.loads(resp.text)
+        try:
+            self._result = json.loads(resp.text)
+        except AttributeError:
+            self._result = {'resp': resp}
 
 
 class RunComponentsSeparately(RunTask):
