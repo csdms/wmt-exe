@@ -232,6 +232,14 @@ def python_site_packages(python):
                         'site-packages')
 
 
+def install_python_package(dir='.', develop=False):
+    with cd(dir) as base:
+        if develop:
+            system([which_python(), 'setup.py', 'develop'])
+        else:
+            system([which_python(), 'setup.py', 'install'])
+
+
 def fetch_homebrew(dir='.', url=None):
     if url is None:
         if is_linux_os():
@@ -265,6 +273,18 @@ def install_homebrew(prefix, dir='.'):
 
     return os.path.abspath(brew)
 
+
+def install_python_package_from_github(repo, prefix, dest=None, develop=False):
+    try:
+        org, name = repo
+    except ValueError:
+        org, name = repo.split('/')
+
+    dest = dest or name
+
+    with cd(os.path.join(prefix, dest)):
+        git_clone_or_update('https://github.com/%s/%s.git' % (org, name))
+        install_python_package(dir='.', develop=develop)
 
 
 def install_wmt_exe(prefix, dir='.'):
@@ -332,6 +352,11 @@ def install_csdms_stack(prefix):
 
     brew('csdms/tools/coupling', args=[opt_with_python, '-v'])
     #brew('csdms/tools/cmi', args=['--HEAD'])
+
+    optdir = os.path.join(prefix, 'opt')
+    install_python_package_from_github(('bmi-forum', 'bmi-babel'), optdir,
+                                       develop=True)
+    install_python_package_from_github('pexpect/pexpect', optdir)
 
 
 def checksum_matches(path, md5):
