@@ -357,6 +357,7 @@ def install_csdms_stack(prefix):
     install_python_package_from_github(('bmi-forum', 'bmi-babel'), optdir,
                                        develop=True)
     install_python_package_from_github('pexpect/pexpect', optdir)
+    install_python_package_from_github('pexpect/ptyprocess', optdir)
 
 
 def checksum_matches(path, md5):
