@@ -420,7 +420,7 @@ def download_url(url, dest, md5=None, cache='.'):
 
 
 
-def set_build_environ(keep=['HOME', 'USER', 'TERM'], env=None):
+def set_build_environ(keep=['HOME', 'USER', 'TERM', 'SHELL'], env=None):
     import getpass
 
     for key in os.environ.keys():
