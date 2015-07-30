@@ -339,6 +339,7 @@ def install_csdms_stack(prefix):
     brew('csdms/tools/bocca', args=[opt_with_python])
     brew('csdms/tools/boccatools', args=[opt_with_python])
 
+    brew('pkg-config')
     brew('csdms/models/child', args=['--HEAD'])
     brew('csdms/models/hydrotrend')
     brew('csdms/models/sedflux', args=['--HEAD'])
