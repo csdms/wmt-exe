@@ -339,6 +339,7 @@ def install_csdms_stack(prefix):
     brew('csdms/tools/bocca', args=[opt_with_python])
     brew('csdms/tools/boccatools', args=[opt_with_python])
 
+    brew('pkg-config')
     brew('csdms/models/child', args=['--HEAD'])
     brew('csdms/models/hydrotrend')
     brew('csdms/models/sedflux', args=['--HEAD'])
@@ -357,6 +358,7 @@ def install_csdms_stack(prefix):
     install_python_package_from_github(('bmi-forum', 'bmi-babel'), optdir,
                                        develop=True)
     install_python_package_from_github('pexpect/pexpect', optdir)
+    install_python_package_from_github('pexpect/ptyprocess', optdir)
 
 
 def checksum_matches(path, md5):
@@ -419,7 +421,7 @@ def download_url(url, dest, md5=None, cache='.'):
 
 
 
-def set_build_environ(keep=['HOME', 'USER', 'TERM'], env=None):
+def set_build_environ(keep=['HOME', 'USER', 'TERM', 'SHELL'], env=None):
     import getpass
 
     for key in os.environ.keys():
@@ -459,7 +461,7 @@ def install_python(prefix, dir='.'):
 
         system([conda, 'install', '-n', 'wmt',
                 'numpy', 'scipy', 'setuptools', 'netcdf4', 'shapely',
-                'pyyaml', 'nose>=1.3', 'requests'])
+                'pyyaml', 'nose>=1.3', 'requests', 'ipython'])
 
         system([conda, 'update', '-n', 'wmt', '--all'])
 
