@@ -74,7 +74,7 @@ def which(prog, env=None):
 
 
 def which_git():
-    return which('git')
+    return which('git', env='GIT')
 
 
 def which_brew():
@@ -94,7 +94,7 @@ def which_cxx():
 
 
 def which_java():
-    return which('java')
+    return which('java', env='JAVA')
 
 
 def gcc_version():
@@ -144,10 +144,12 @@ def git_clone(url, git=None, dir='.'):
         system([git, 'reset', '--hard', 'origin/master'])
 
 
-def git_pull(url, dir='.'):
+def git_pull(url, git=None, dir='.'):
+    git = git or which('git')
+
     with cd(dir):
-        system(['git', 'checkout', '-q', 'master'])
-        system(['git', 'pull', 'origin', '-q',
+        system([git, 'checkout', '-q', 'master'])
+        system([git, 'pull', 'origin', '-q',
                 'refs/heads/master:refs/remotes/origin/master'])
 
 
@@ -339,11 +341,10 @@ def install_csdms_stack(prefix):
     brew('csdms/tools/bocca', args=[opt_with_python])
     brew('csdms/tools/boccatools', args=[opt_with_python])
 
-    brew('pkg-config')
-    brew('csdms/models/child', args=['--HEAD'])
-    brew('csdms/models/hydrotrend')
-    brew('csdms/models/sedflux', args=['--HEAD'])
-    brew('csdms/models/cem', args=['--HEAD'])
+    #brew('csdms/models/child', args=['--HEAD'])
+    #brew('csdms/models/hydrotrend')
+    #brew('csdms/models/sedflux', args=['--HEAD'])
+    #brew('csdms/models/cem', args=['--HEAD'])
 
     brew('csdms/tools/esmf')
     if is_linux_os():
@@ -358,7 +359,6 @@ def install_csdms_stack(prefix):
     install_python_package_from_github(('bmi-forum', 'bmi-babel'), optdir,
                                        develop=True)
     install_python_package_from_github('pexpect/pexpect', optdir)
-    install_python_package_from_github('pexpect/ptyprocess', optdir)
 
 
 def checksum_matches(path, md5):
@@ -433,6 +433,7 @@ def set_build_environ(keep=['HOME', 'USER', 'TERM', 'SHELL'], env=None):
     os.environ.setdefault('TERM', 'xterm-256color')
 
     prepend_path('PATH', os.path.dirname(which('ruby')))
+    prepend_path('PATH', os.path.dirname(which('git')))
 
 
 def install_python(prefix, dir='.'):
@@ -461,7 +462,8 @@ def install_python(prefix, dir='.'):
 
         system([conda, 'install', '-n', 'wmt',
                 'numpy', 'scipy', 'setuptools', 'netcdf4', 'shapely',
-                'pyyaml', 'nose>=1.3', 'requests', 'ipython'])
+                'pyyaml', 'nose>=1.3', 'requests', 'ipython-notebook',
+                'matplotlib'])
 
         system([conda, 'update', '-n', 'wmt', '--all'])
 
