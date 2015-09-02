@@ -142,7 +142,10 @@ def which_java():
 
 def gcc_version():
     version_s = check_output([which_cc(), '-dumpversion']).strip()
-    (major, minor, micro) = version_s.split('.')
+    try:
+        (major, minor, _) = version_s.split('.')
+    except ValueError:
+        (major, minor) = version_s.split('.')
     return '%s.%s' % (major, minor)
 
 
