@@ -14,15 +14,6 @@ BUILD_ENVIRON = {
                              '/etc', '/usr/lib']),
 }
 
-MAC_OS_NAME = {
-    '10.6': 'Snow Leopard',
-    '10.7': 'Lion',
-    '10.8': 'Mountain Lion',
-    '10.9': 'Mavericks',
-    '10.10': 'Yosemite',
-}
-
-
 LOCAL_RUN_ENVIRON = {
     'PATH': os.pathsep.join([
         '$PREFIX/opt/conda/envs/wmt/bin',
@@ -52,6 +43,15 @@ BMI_COMPONENT_REPOS = [
     'https://github.com/mcflugen/hydrotrend,add-bmi-metadata',
     'https://github.com/csdms/bmi-python',
 ]
+
+MAC_OS_NAME = {
+    '10.6': 'Snow Leopard',
+    '10.7': 'Lion',
+    '10.8': 'Mountain Lion',
+    '10.9': 'Mavericks',
+    '10.10': 'Yosemite',
+    '10.11': 'El Cap',
+}
 
 
 def check_output(*args, **kwds):
@@ -336,7 +336,7 @@ def install_python_package_from_github(repo, prefix, dest=None, develop=False):
         install_python_package(dir='.', develop=develop)
 
 
-def install_wmt_exe(prefix, dir='.'):
+def install_wmt_exe(prefix='.', dir='.'):
     create_and_prepend_path(
         'PYTHONPATH', os.path.join(
             prefix, python_site_packages(which_python())))
@@ -361,7 +361,7 @@ def install_wmt_exe(prefix, dir='.'):
         ln_s('wmt.cfg', os.path.join(prefix, 'etc', 'wmt.cfg'))
 
 
-def install_csdms_stack(prefix):
+def install_csdms_stack(prefix='.'):
     taps = ['csdms/tools', 'csdms/models', 'homebrew/science']
     if is_linux_os():
         taps.append('csdms/dupes')
@@ -589,11 +589,39 @@ def print_environment(file=None, env=None, shell='sh'):
     file.write(os.linesep.join(lines))
 
 
-def print_activation_scripts():
+def print_activation_scripts(env):
     for shell in ['sh', 'csh']:
         with open('activate.{shell}'.format(shell=shell), 'w') as fp:
-            print_environment(file=fp, shell=shell, env=LOCAL_RUN_ENVIRON)
+            print_environment(file=fp, shell=shell, env=env)
 
+
+def construct_build_env(args):
+    env = BUILD_ENVIRON.copy()
+
+    env.update({
+        'CC': args.with_cc,
+        'CXX': args.with_cxx,
+        'JAVA': args.with_java,
+        'RUBY': args.with_ruby,
+        'HOMEBREW_MAKE_JOBS': str(args.make_jobs),
+    })
+    if args.brew_temp:
+        env['HOMEBREW_TEMP'] = args.brew_temp
+    prepend_path('PATH', os.path.dirname(env['RUBY']), env=env)
+
+    return env
+
+
+def construct_run_env(prefix):
+    from string import Template
+
+    prefix = os.path.abspath(prefix)
+
+    env = {}
+    for key, val in LOCAL_RUN_ENVIRON.items():
+        env[key] = Template(val).safe_substitute(PREFIX=prefix)
+
+    return env
 
 
 def print_summary(start, end):
@@ -667,46 +695,30 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    BUILD_ENVIRON.update({
-        'CC': args.with_cc,
-        'CXX': args.with_cxx,
-        'JAVA': args.with_java,
-        'RUBY': args.with_ruby,
-        'HOMEBREW_MAKE_JOBS': str(args.make_jobs),
-    })
-    if args.brew_temp:
-        BUILD_ENVIRON['HOMEBREW_TEMP'] = args.brew_temp
-
-    prepend_path('PATH', os.path.dirname(BUILD_ENVIRON['RUBY']), env=BUILD_ENVIRON)
+    build_env = construct_build_env(args)
+    run_env = construct_run_env(args.prefix)
 
     start = datetime.now()
 
-    install_prefix = os.path.abspath(args.prefix)
-
-    from string import Template
-
-    for key, val in LOCAL_RUN_ENVIRON.items():
-        LOCAL_RUN_ENVIRON[key] = Template(val).safe_substitute(PREFIX=args.prefix)
-
-    with cd(install_prefix) as base:
+    with cd(args.prefix) as base:
         for dir in ['bin', 'etc', 'tmp', 'var/log', 'var/cache', 'opt', 'local']:
             if not os.path.isdir(dir):
                 mkpath(dir)
 
-        with setenv(BUILD_ENVIRON) as _:
-            BUILD_ENVIRON['GIT'] = args.with_git or install_git()
-            BUILD_ENVIRON['PYTHON'] = args.with_python or install_python()
-            BUILD_ENVIRON['BREW'] = args.with_brew or install_homebrew()
+        with setenv(build_env) as _:
+            build_env['GIT'] = args.with_git or install_git()
+            build_env['PYTHON'] = args.with_python or install_python()
+            build_env['BREW'] = args.with_brew or install_homebrew()
 
-        with setenv(BUILD_ENVIRON) as _:
-            install_csdms_stack(dir)
-            install_wmt_exe(dir)
+        with setenv(build_env) as _:
+            install_csdms_stack()
+            install_wmt_exe()
 
-        with setenv(LOCAL_RUN_ENVIRON) as _:
+        with setenv(run_env) as _:
             install_components()
             install_babelized_components()
 
-        print_activation_scripts()
+        print_activation_scripts(run_env)
 
     end = datetime.now()
 
