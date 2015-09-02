@@ -5,7 +5,7 @@ import subprocess
 import shutil
 import urllib2
 import platform
-from datetime import datetime
+from datetime import date, datetime
 from distutils.dir_util import mkpath
 
 
@@ -21,6 +21,37 @@ MAC_OS_NAME = {
     '10.9': 'Mavericks',
     '10.10': 'Yosemite',
 }
+
+
+LOCAL_RUN_ENVIRON = {
+    'PATH': os.pathsep.join([
+        '$PREFIX/opt/conda/envs/wmt/bin',
+        '$PREFIX/local/bin',
+        '$PREFIX/bin',
+        '/usr/bin', '/bin', '/usr/sbin/', '/sbin', '/etc', '/usr/lib']),
+    'PYTHONPATH': os.pathsep.join([
+        '$PREFIX/csdms/install/lib/python2.7/site-packages',
+        '$PREFIX/local/Cellar/babel/1.4.0/lib/python2.7/site-packages',
+        '$PREFIX/local/Cellar/cca-spec-babel/0.8.6/lib/cca-spec-babel-0_8_6-babel-1.4.0/python2.7/site-packages',
+        '$PREFIX/opt/conda/envs/wmt/lib/python2.7',
+        '$PREFIX/opt/conda/envs/wmt/lib/python2.7/site-packages',
+        '$PREFIX/lib/python2.7/site-packages',
+        '$PREFIX/local/lib/python2.7/site-packages']),
+    'LD_LIBRARY_PATH': os.pathsep.join([
+        '$PREFIX/csdms/install/lib',
+        '$PREFIX/local/Cellar/babel/1.4.0/lib',
+        '$PREFIX/opt/conda/envs/wmt/lib',
+        '$PREFIX/lib',
+        '$PREFIX/local/lib']),
+    'CLASSPATH': os.pathsep.join(['$PREFIX/local/lib/java']),
+    'SIDL_DLL_PATH': ';'.join(['$PREFIX/csdms/install/share/cca']),
+}
+
+BMI_COMPONENT_REPOS = [
+    'https://github.com/mcflugen/sedflux,add-function-pointers',
+    'https://github.com/mcflugen/hydrotrend,add-bmi-metadata',
+    'https://github.com/csdms/bmi-python',
+]
 
 
 def check_output(*args, **kwds):
@@ -59,6 +90,18 @@ class cd(object):
 
     def __exit__(self, type, value, traceback):
         os.chdir(self._starting_dir)
+
+
+class setenv(object):
+    def __init__(self, env):
+        self._env = env
+
+    def __enter__(self):
+        self._starting_env = os.environ.copy()
+        reset_env(env=self._env)
+
+    def __exit__(self, type, value, traceback):
+        reset_env(env=self._starting_env)
 
 
 def which(prog, env=None):
@@ -182,8 +225,6 @@ def brew_tap(taps, brew=None):
 def brew(formula, brew=None, taps=[], args=[]):
     brew = brew or which('brew')
 
-    prepend_path('PATH', os.path.dirname(which('ruby')))
-
     brew_tap(taps)
     system([brew, 'install', formula] + args)
 
@@ -196,11 +237,14 @@ def status(message):
     print ' '.join(['==>', message])
 
 
-def prepend_path(var, path):
+def prepend_path(var, path, env=None):
     path = os.path.normpath(path)
 
+    env = env or os.environ
+
     try:
-        paths = os.environ[var].split(os.pathsep)
+        paths = env[var].split(os.pathsep)
+        #paths = os.environ[var].split(os.pathsep)
     except KeyError:
         paths = []
     else:
@@ -211,7 +255,8 @@ def prepend_path(var, path):
     except ValueError:
         pass
 
-    os.environ[var] = os.pathsep.join([path] + paths)
+    env[var] = os.pathsep.join([path] + paths)
+    #os.environ[var] = os.pathsep.join([path] + paths)
 
 
 def create_and_prepend_path(var, path):
@@ -256,7 +301,7 @@ def fetch_wmt_exe(dir='.', url=None):
     git_clone_or_update(url or 'https://github.com/csdms/wmt-exe', dir=dir)
 
 
-def install_homebrew(prefix, dir='.'):
+def install_homebrew(prefix='.', dir='local'):
     with cd(prefix) as base:
         fetch_homebrew(dir=dir)
 
@@ -267,6 +312,8 @@ def install_homebrew(prefix, dir='.'):
                 ln_s(which_python(), 'python')
 
     brew = os.path.join(prefix, dir, 'bin', 'brew')
+
+    prepend_path('PATH', os.path.dirname(which('ruby')))
 
     system([brew, 'update'])
 
@@ -421,13 +468,27 @@ def download_url(url, dest, md5=None, cache='.'):
 
 
 
+def reset_env(keep=['HOME', 'USER', 'TERM', 'SHELL'], env=None):
+    import getpass
+
+    for key in os.environ.keys():
+        if key not in keep:
+            del os.environ[key]
+    if env is not None:
+        os.environ.update(env)
+    os.environ.setdefault('HOME', os.path.expanduser('~'))
+    os.environ.setdefault('USER', getpass.getuser())
+    os.environ.setdefault('TERM', 'xterm-256color')
+
+
 def set_build_environ(keep=['HOME', 'USER', 'TERM', 'SHELL'], env=None):
     import getpass
 
     for key in os.environ.keys():
         if key not in keep:
             del os.environ[key]
-    os.environ.update(env)
+    if env is not None:
+        os.environ.update(env)
     os.environ.setdefault('HOME', os.path.expanduser('~'))
     os.environ.setdefault('USER', getpass.getuser())
     os.environ.setdefault('TERM', 'xterm-256color')
@@ -436,7 +497,24 @@ def set_build_environ(keep=['HOME', 'USER', 'TERM', 'SHELL'], env=None):
     prepend_path('PATH', os.path.dirname(which('git')))
 
 
-def install_python(prefix, dir='.'):
+def install_git(prefix='.'):
+    install_prefix = os.path.abspath(os.path.join(prefix, 'opt', 'git'))
+
+    with cd(os.path.join(prefix, 'src')):
+        git_clone_or_update('https://github.com/git/git', dir='git')
+        with cd('git'):
+            system(['make', 'configure'])
+            system(['./configure', '--prefix={prefix}'.format(prefix=install_prefix)])
+            system(['make', 'all', 'install'])
+
+    os.environ['PATH'] = os.pathsep.join([
+        os.path.join(install_prefix, 'bin'),
+        os.environ['PATH']])
+
+    return os.path.join(install_prefix, 'bin', 'git')
+
+
+def install_python(prefix='.'):
     import urllib2
 
     cache = os.path.join(prefix, 'var', 'cache')
@@ -471,6 +549,51 @@ def install_python(prefix, dir='.'):
              os.path.join(prefix, 'bin', 'python'))
 
     return os.path.join(env_bindir, 'python')
+
+
+def install_components(prefix='.'):
+    install_prefix = os.path.abspath(os.path.join(prefix, 'opt', 'models'))
+
+    with open('_repos.yaml', 'w') as fp:
+        fp.write(os.linesep.join(['- ' + url for url in BMI_COMPONENT_REPOS]))
+
+    with open('_models.yaml', 'w') as fp:
+        system(['bmi-babel-fetch', '--file=_repos.yaml',
+                '--prefix={prefix}'.format(prefix=install_prefix)], stdout=fp)
+
+    system(['bmi-babel-make', '_models.yaml'])
+
+
+def install_babelized_components(prefix='.'):
+    with cd(os.path.join(prefix, 'csdms')):
+        system(['./configure'])
+        system(['make', 'all', 'install'])
+
+
+def print_environment(file=None, env=None, shell='sh'):
+    file = file or sys.stdout
+    env = env or os.environ
+
+    if shell == 'sh':
+        setvar = 'export ${name}=${value}'
+    else:
+        setvar = 'setenv ${name} ${value}'
+
+    lines = []
+    for name in env:
+        try:
+            lines.append(setvar.format(name=name, value=env[name]))
+        except KeyError:
+            pass
+
+    file.write(os.linesep.join(lines))
+
+
+def print_activation_scripts():
+    for shell in ['sh', 'csh']:
+        with open('activate.{shell}'.format(shell=shell), 'w') as fp:
+            print_environment(file=fp, shell=shell, env=LOCAL_RUN_ENVIRON)
+
 
 
 def print_summary(start, end):
@@ -515,15 +638,15 @@ if __name__ == '__main__':
     parser.add_argument('--verbose', action='store_true',
                         help='Be verbose')
 
-    parser.add_argument('--with-python', default='internal',
+    parser.add_argument('--with-python', default=None, type=str,
                          metavar='PYTHON',
                          help='Path to Python executable [%(default)s]')
-    parser.add_argument('--with-brew', default='internal',
+    parser.add_argument('--with-brew', default=None, type=str,
                          metavar='BREW',
                          help='Path to brew executable [%(default)s]')
 
-    parser.add_argument('--with-git', default=git, metavar='git',
-                        required=not git,
+    parser.add_argument('--with-git', default=None, type=str,
+                        metavar='git',# required=not git,
                         help='Path to git executable [%(default)s]')
     parser.add_argument('--with-cc', default=cc,
                         metavar='cc', required=not cc,
@@ -545,39 +668,45 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     BUILD_ENVIRON.update({
-        'GIT': args.with_git,
         'CC': args.with_cc,
         'CXX': args.with_cxx,
         'JAVA': args.with_java,
         'RUBY': args.with_ruby,
+        'HOMEBREW_MAKE_JOBS': str(args.make_jobs),
     })
-    set_build_environ(env=BUILD_ENVIRON)
+    if args.brew_temp:
+        BUILD_ENVIRON['HOMEBREW_TEMP'] = args.brew_temp
+
+    prepend_path('PATH', os.path.dirname(BUILD_ENVIRON['RUBY']), env=BUILD_ENVIRON)
 
     start = datetime.now()
 
     install_prefix = os.path.abspath(args.prefix)
+
+    from string import Template
+
+    for key, val in LOCAL_RUN_ENVIRON.items():
+        LOCAL_RUN_ENVIRON[key] = Template(val).safe_substitute(PREFIX=args.prefix)
+
     with cd(install_prefix) as base:
         for dir in ['bin', 'etc', 'tmp', 'var/log', 'var/cache', 'opt', 'local']:
             if not os.path.isdir(dir):
                 mkpath(dir)
 
-    if args.with_python == 'internal':
-        os.environ['PYTHON'] = install_python(install_prefix)
-    else:
-        os.environ.setdefault('PYTHON', args.with_python)
+        with setenv(BUILD_ENVIRON) as _:
+            BUILD_ENVIRON['GIT'] = args.with_git or install_git()
+            BUILD_ENVIRON['PYTHON'] = args.with_python or install_python()
+            BUILD_ENVIRON['BREW'] = args.with_brew or install_homebrew()
 
-    os.environ['HOMEBREW_MAKE_JOBS'] = str(args.make_jobs)
-    if args.brew_temp:
-        os.environ['HOMEBREW_TEMP'] = args.brew_temp
+        with setenv(BUILD_ENVIRON) as _:
+            install_csdms_stack(dir)
+            install_wmt_exe(dir)
 
-    if args.with_brew == 'internal':
-        os.environ['BREW'] = install_homebrew(install_prefix, dir='local')
-    else:
-        os.environ.setdefault('BREW', args.with_brew)
+        with setenv(LOCAL_RUN_ENVIRON) as _:
+            install_components()
+            install_babelized_components()
 
-    with cd(install_prefix) as dir:
-        install_csdms_stack(dir)
-        install_wmt_exe(dir)
+        print_activation_scripts()
 
     end = datetime.now()
 
