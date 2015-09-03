@@ -587,9 +587,9 @@ def print_environment(file=None, env=None, shell='sh'):
     env = env or os.environ
 
     if shell == 'sh':
-        setvar = 'export ${name}=${value}'
+        setvar = 'export {name}={value}'
     else:
-        setvar = 'setenv ${name} ${value}'
+        setvar = 'setenv {name} {value}'
 
     lines = []
     for name in env:
