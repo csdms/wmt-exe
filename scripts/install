@@ -305,6 +305,8 @@ def fetch_wmt_exe(dir='.', url=None):
 
 
 def install_homebrew(prefix='.', dir='local'):
+    prefix = os.path.abspath(prefix)
+
     with cd(prefix) as base:
         fetch_homebrew(dir=dir)
 
@@ -340,6 +342,8 @@ def install_python_package_from_github(repo, prefix, dest=None, develop=False):
 
 
 def install_wmt_exe(prefix='.', dir='.'):
+    prefix = os.path.abspath(prefix)
+
     create_and_prepend_path(
         'PYTHONPATH', os.path.join(
             prefix, python_site_packages(which_python())))
@@ -365,6 +369,8 @@ def install_wmt_exe(prefix='.', dir='.'):
 
 
 def install_csdms_stack(prefix='.'):
+    prefix = os.path.abspath(prefix)
+
     taps = ['csdms/tools', 'csdms/models', 'homebrew/science']
     if is_linux_os():
         taps.append('csdms/dupes')
@@ -520,6 +526,8 @@ def install_git(prefix='.'):
 
 def install_python(prefix='.'):
     import urllib2
+
+    prefix = os.path.abspath(prefix)
 
     cache = os.path.join(prefix, 'var', 'cache')
     with cd(cache):
