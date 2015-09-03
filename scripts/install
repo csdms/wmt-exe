@@ -374,6 +374,7 @@ def install_csdms_stack(prefix='.'):
         brew('automake')
 
     if is_linux_os():
+        brew('xz')
         brew('csdms/dupes/netcdf', args=['--enable-fortran'])
         brew('csdms/dupes/cmake')
     else:
