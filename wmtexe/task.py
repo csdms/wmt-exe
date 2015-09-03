@@ -13,17 +13,17 @@ from cmt.framework.services import register_component_classes
 logger = logging.getLogger(__name__)
 
 
-register_component_classes([
-    'csdms.model.Sedflux2d.Sedflux2d',
-    'csdms.model.Sedflux3d.Sedflux3d',
-    'csdms.model.Child.Child',
-    'csdms.model.Hydrotrend.Hydrotrend',
-    'csdms.model.Plume.Plume',
-    'csdms.model.Avulsion.Avulsion',
-    'csdms.model.Cem.Cem',
-    'csdms.model.Waves.Waves',
-    'cmt.services.constant.constant.River',
-])
+def register_all_csdms_components():
+    try:
+        from cmt.components import __all__ as names
+    except ImportError:
+        pass
+    else:
+        register_component_classes(
+            ['cmt.components.{name}'.format(name=name) for name in names])
+
+
+register_all_csdms_components()
 
 
 class TaskError(Exception):
@@ -387,5 +387,5 @@ class RunComponentCoupled(RunTask):
         with open('components.yaml', 'r') as opened:
             model = Model.load(opened.read())
         self.report('running', 'running model')
-        model.go(file='model.yaml')
+        model.go(filename='model.yaml')
         self.report('running', 'finished')
