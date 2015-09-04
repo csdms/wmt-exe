@@ -178,29 +178,34 @@ def ln_s(src, dst):
         system(['ln', '-s', os.path.abspath(src), os.path.abspath(dst)])
 
 
-def git_clone(url, git=None, dir='.'):
+def git_clone(url, git=None, dir='.', branch='master'):
     git = git or which('git')
 
     with cd(dir):
         system([git, 'init', '-q'])
         system([git, 'config', 'remote.origin.url', url])
         system([git, 'config', 'remote.origin.fetch',
-                '+refs/head/*:refs/remotes/origin/*'])
+                '+refs/heads/*:refs/remotes/origin/*'])
         system([git, 'fetch', 'origin',
-                'master:refs/remotes/origin/master', '-n', '--depth=1'])
-        system([git, 'reset', '--hard', 'origin/master'])
+                '{branch}:refs/remotes/origin/{branch}'.format(branch=branch),
+                '-n', '--depth=1'])
+        system([git, 'reset', '--hard',
+                'origin/{branch}'.format(branch=branch)])
+        system([git, 'checkout', '-q', branch])
 
 
-def git_pull(url, git=None, dir='.'):
+def git_pull(url, git=None, dir='.', branch='master'):
     git = git or which('git')
 
     with cd(dir):
-        system([git, 'checkout', '-q', 'master'])
-        system([git, 'pull', 'origin', '-q',
-                'refs/heads/master:refs/remotes/origin/master'])
+        system(['git', 'checkout', '-q', branch])
+        system(['git', 'pull', 'origin', '-q',
+                ':'.join([
+                    'refs/heads/{branch}',
+                    'refs/remotes/origin/{branch}']).format(branch=branch)])
 
 
-def git_clone_or_update(url, dir='.'):
+def git_clone_or_update(url, dir='.', branch='master'):
     if os.path.isdir(os.path.join(dir, '.git')):
         status('Updating %s' % url)
         git_pull(url, dir=dir)
@@ -329,7 +334,8 @@ def install_homebrew(prefix='.', dir='local'):
     return os.path.abspath(brew)
 
 
-def install_python_package_from_github(repo, prefix, dest=None, develop=False):
+def install_python_package_from_github(repo, prefix, dest=None, develop=False,
+                                       branch='master'):
     try:
         org, name = repo
     except ValueError:
@@ -338,7 +344,8 @@ def install_python_package_from_github(repo, prefix, dest=None, develop=False):
     dest = dest or name
 
     with cd(os.path.join(prefix, dest)):
-        git_clone_or_update('https://github.com/%s/%s.git' % (org, name))
+        git_clone_or_update('https://github.com/%s/%s.git' % (org, name),
+                            branch=branch)
         install_python_package(dir='.', develop=develop)
 
 
