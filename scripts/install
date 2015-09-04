@@ -33,7 +33,8 @@ LOCAL_RUN_ENVIRON = {
         '$PREFIX/local/Cellar/babel/1.4.0/lib',
         '$PREFIX/opt/conda/envs/wmt/lib',
         '$PREFIX/lib',
-        '$PREFIX/local/lib']),
+        '$PREFIX/local/lib',
+        '$PREFIX/opt/models/lib']),
     'CLASSPATH': os.pathsep.join(['$PREFIX/local/lib/java']),
     'SIDL_DLL_PATH': ';'.join(['$PREFIX/csdms/install/share/cca']),
 }
