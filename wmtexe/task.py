@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import tarfile
 import shutil
@@ -122,6 +123,56 @@ class open_logs(object):
         self._err.close()
 
 
+class __redirect_output(object):
+    def __init__(self, name, log_dir='.', join=False):
+        self._stdout = sys.stdout
+        self._stderr = sys.stderr
+
+        prefix = os.path.abspath(log_dir)
+        self._out_log = os.path.join(prefix, name)
+        if join:
+            self._err_log = self._out_log
+        else:
+            self._err_log = os.path.join(prefix, '%s.err' % name)
+
+    def __enter__(self):
+        self._out = open(self._out_log, 'w')
+        if self._out_log == self._err_log:
+            self._err = self._out
+        else:
+            self._err = open(self._err_log, 'w')
+        sys.stdout = self._out
+        sys.stderr = self._err
+
+        return self._out, self._err
+
+    def __exit__(self, type, value, traceback):
+        self._out.close()
+        if self._out_log != self._err_log:
+            self._err.close()
+
+        sys.stdout = self._stdout
+        sys.stderr = self._stderr
+
+
+class __open_reporter(object):
+    def __init__(self, id, server, fname):
+        self._args = (id, server, fname)
+
+    def __enter__(self):
+        self._reporter = Reporter(*self._args)
+        self._reporter.start()
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self._reporter.stop()
+        self._reporter.join()
+
+        if exc_type is not None:
+            reporter = TaskStatus(*self._args)
+            # reporter.report('error', reporter.status_with_line_nos(n=40))
+            reporter.report('error', 'THERE WAS AN ERROR!!!')
+
+
 def download_run_tarball(server, uuid, dest_dir='.'):
     import requests
 
@@ -177,7 +228,7 @@ def report_status(id, url, status, message):
     return resp
 
 
-class Task(object):
+class __WmtReporter(object):
     def __init__(self, id, server):
         self._id = id
         self._server = server
@@ -226,29 +277,81 @@ class Task(object):
         return subprocess.check_output(cmd)
 
 
-
-class TaskStatus(Task):
-    def __init__(self, id, server, filename):
+class __TaskStatus(__WmtReporter):
+    def __init__(self, id, server, filename, pid=None):
         super(TaskStatus, self).__init__(id, server)
 
         self._status_file = filename
         self._tail = os.environ.get('TAIL', 'tail')
+        self._pid = pid
 
     @property
     def status_file(self):
         return self._status_file
 
-    def get_status(self):
+    def running(self):
+        if self._pid:
+            try:
+                os.kill(self._pid, 0)
+            except OSError:
+                return False
+            else:
+                return True
+        else:
+            return True
+
+    def tail(self, n=10):
         try:
-            time_str = subprocess.check_output(
-                [self._tail, '-n1', self.status_file])
+            status = subprocess.check_output(
+                [self._tail, '-n{n}'.format(n=n), self.status_file])
         except Exception:
             raise
+        else:
+            return status
 
-        if 'done' in time_str:
+    def wc_l(self):
+        try:
+            n_lines = subprocess.check_output(
+                ['wc', '-l', self.status_file])
+        except Exception:
+            raise
+        else:
+            return int(n_lines.split()[0])
+
+    def prepend_to_lines(self, lines, prefix):
+        new_lines = []
+        for (prefix, line) in zip(lines, prefix):
+            new_lines.append(prefix + suffix)
+        return new_lines
+
+    def status_with_line_nos(self, n=10):
+        last_lines = self.tail(n=n).split(os.linesep)
+        n_lines = self.wc_l()
+
+        start_line_no = n_lines - len(last_lines)
+
+        if start_line_no < 0:
+            lines = ['Waiting for stdout...']
+        else:
+            lines = [
+                'Last {n} lines from stdout...'.format(n=len(last_lines)),
+                '']
+            for line_no, line in enumerate(last_lines, start_line_no):
+                lines.append('[stdout-{no}] {line}'.format(
+                    no=line_no, line=line))
+
+        return os.linesep.join(lines)
+
+    def get_status(self):
+        if not self.running():
             raise TaskCompleted()
 
-        return time_str
+        status = self.status_with_line_nos()
+
+        # if 'done' in status:
+        #     raise TaskCompleted()
+
+        return status
 
     def report_status(self):
         import time
@@ -263,7 +366,8 @@ class TaskStatus(Task):
                 self.report('running', 'Error getting status (%s)' % error)
                 #return
             else:
-                self.report('running', 'Time: %s days' % status)
+                # self.report('running', 'Time: %s days' % status)
+                self.report('running', '{message}'.format(message=status))
 
         self.report('success', 'completed')
 
@@ -271,7 +375,43 @@ class TaskStatus(Task):
         self.report_status()
 
 
-class RunTask(Task):
+class __Reporter(threading.Thread):
+    def __init__(self, id, server, filename, **kwds):
+        super(Reporter, self).__init__(**kwds)
+        self._stop = threading.Event()
+        self._args = (id, server, filename)
+
+    def stop(self):
+        self._stop.set()
+
+    def stopped(self):
+        return self._stop.is_set()
+
+    def run(self):
+        import time
+
+        reporter = TaskStatus(*self._args)
+        while 1:
+            try:
+                status = reporter.get_status()
+            except TaskCompleted:
+                break
+            except Exception as error:
+                reporter.report('running', 'Error getting status (%s)' % error)
+            else:
+                reporter.report('running', '{message}'.format(message=status))
+            time.sleep(10)
+
+            if self.stopped():
+                beak
+
+        reporter.report('success', 'completed')
+
+
+from .reporter import WmtTaskReporter
+
+
+class RunTask(WmtTaskReporter):
     def __init__(self, run_id, server, exe_env=None, exe_dir='~/.wmt'):
         super(RunTask, self).__init__(run_id, server)
 
@@ -315,6 +455,7 @@ class RunTask(Task):
             self.report('uploading', str(error))
         else:
             self.report('uploaded', 'uploaded simulation output')
+            self.cleanup()
 
         self.report_success('done')
 
@@ -370,22 +511,40 @@ class RunComponentsSeparately(RunTask):
                           cwd=run_dir)
 
 
+from .reporter import open_reporter, redirect_output
+
+
 class RunComponentCoupled(RunTask):
     def run(self):
         os.chdir(self.sim_dir)
 
         import yaml
-        with open('model.yaml', 'r') as opened:
-            model = yaml.load(opened.read())
-        status_file = os.path.abspath(os.path.join(model['driver'],
-                                                   '_time.txt'))
+        from datetime import datetime
 
-        status = TaskStatus(self.id, self.server, status_file)
-        timer = threading.Thread(target=status)
-        timer.start()
+        with open(os.path.join(self.sim_dir, 'model.yaml'), 'r') as fp:
+            model = yaml.load(fp.read())
 
-        with open('components.yaml', 'r') as opened:
-            model = Model.load(opened.read())
-        self.report('running', 'running model')
-        model.go(filename='model.yaml')
+        with open('.info.yaml', 'w') as fp:
+            info = {
+                'start_time': datetime.now().isoformat(),
+                'server': self.server,
+                'id': self.id,
+                'prefix': self.sim_dir,
+                'stdout': 'stdout',
+                'driver': model['driver'],
+            }
+            yaml.dump(info, stream=fp, default_flow_style=True)
+
+        # driver = os.path.join(self.sim_dir, model['driver'])
+        status_file = os.path.abspath('stdout')
+        with redirect_output(status_file, join=True):
+            with open_reporter(self.id, self.server, status_file):
+                # with open('model.yaml', 'r') as opened:
+                #     model = yaml.load(opened.read())
+                with open('components.yaml', 'r') as opened:
+                    model = Model.load(opened.read())
+
+                self.report('running', 'running model')
+                model.go(filename='model.yaml')
+
         self.report('running', 'finished')
