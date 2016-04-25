@@ -22,9 +22,14 @@ def main():
                         help='Extra arguments for wmt-slave command')
     parser.add_argument('--launcher', choices=_LAUNCHERS.keys(),
                         default='bash', help='Launch method')
+    parser.add_argument('--run', action='store_true',
+                        help='Launch simulation')
 
     args = parser.parse_args()
 
     launcher = _LAUNCHERS[args.launcher](args.uuid)
-    print(launcher.script())
+    if args.run:
+        launcher.run()
+    else:
+        print(launcher.script())
 
