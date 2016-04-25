@@ -1,4 +1,5 @@
 import os
+import sys
 import argparse
 
 from ..slave import Slave
@@ -33,16 +34,21 @@ def main():
                         help='print execution environment and exit')
     args = parser.parse_args()
 
-    env = WmtEnvironment.from_config(args.config)
+    # env = WmtEnvironment.from_config(args.config)
+    env = os.environ
+    env['PATH'] = os.pathsep.join(
+        [os.path.join(sys.prefix, 'bin'), env['PATH']])
+    #     ['/home/csdms/wmt/topoflow.1/conda/bin', env['PATH']])
 
     if args.show_env:
         print str(env)
         return
 
-    slave = Slave(args.server_url, env=env.env)
+    # slave = Slave(args.server_url, env=env.env)
+    slave = Slave(args.server_url, env=env)
 
     try:
-        _ = slave.start_task(args.id, dir=args.exec_dir, env=env.env)
+        _ = slave.start_task(args.id, dir=args.exec_dir, env=env)
     #except TaskError as error:
     #    slave.report_error(args.id, str(error))
     #    print error
