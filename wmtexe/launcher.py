@@ -10,8 +10,8 @@ class Launcher(object):
 
     def __init__(self, sim_id):
         self.sim_id = sim_id
-        self.script_path = os.path.join(self.launch_dir,
-                                        '%s.sh' % self.sim_id)
+        self.script_path = os.path.expanduser(os.path.join(self.launch_dir,
+                                                           '%s.sh' % self.sim_id))
 
     def before_launch(self, **kwds):
         with open(self.script_path, 'w') as f:
@@ -28,7 +28,7 @@ class Launcher(object):
 
         try:
             self.launch(**kwds)
-        except subprocess.SubprocessError:
+        except subprocess.CalledProcessError:
             raise
         else:
             self.after_success(**kwds)
@@ -45,7 +45,7 @@ class Launcher(object):
         import shlex
         from pipes import quote
 
-        command = ['wmt-slave', quote(self.sim_id)] + self._extra_args
+        command = ['/home/csdms/wmt/topoflow.1/conda/bin/wmt-slave', quote(self.sim_id)] + self._extra_args
 
         if extra_args:
             if isinstance(extra_args, StringTypes):
@@ -64,23 +64,23 @@ class QsubLauncher(Launcher):
 #PBS -q debug
 #PBS -l mem=10gb
 #PBS -j oe
+#PBS -k oe
 
 cd $TMPDIR
-source $(wmt-activate)
 
 {slave_command}
 """.strip()
-    _extra_args = ['--exec-dir=$TMPDIR', ]
+    _extra_args = ['--exec-dir=$TMPDIR', '--server-url=https://csdms.colorado.edu/wmt/api-testing']
     
     def launch_command(self, **kwds):
-        return ['qsub', '-o', self.launch_dir, self.script_path]
+        return ['/opt/torque/bin/qsub', '-o', self.launch_dir, self.script_path]
 
 
 class BashLauncher(Launcher):
     _script = """
 #! /bin/bash
 
-source $(wmt-activate)
+# source $(wmt-activate)
 
 {slave_command}
 """.strip()
