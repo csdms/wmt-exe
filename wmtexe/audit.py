@@ -1,3 +1,5 @@
+"""Tools for checking a wmt-exe environment."""
+
 from os import path, pathsep
 import subprocess
 
@@ -53,6 +55,19 @@ def _is_executable(program):
 
 
 def result_message(assertion, checking):
+    """Create a color-coded message.
+
+    Parameters
+    ----------
+    assertion : bool
+    checking : str
+
+    Returns
+    -------
+    string
+        Human-readable message.
+
+    """
     if assertion:
         return ' '.join([formatting.green(u'\u2713'), checking, 'yes'])
     else:
@@ -60,16 +75,59 @@ def result_message(assertion, checking):
 
 
 def check_is_executable(program):
+    """Check whether a program is executable.
+
+    Parameters
+    ----------
+    program : str
+        Program name.
+
+    Returns
+    -------
+    string
+        Human-readable message.
+
+    """
     check_message = '%s is executable...' % program
     return result_message(_is_executable(program), check_message)
 
 
 def check_is_dir(path_to_dir):
+    """Check whether a path is a directory.
+
+    Parameters
+    ----------
+    path_to_dir : str
+        A path.
+
+    Returns
+    -------
+    string
+        Human-readable message.
+
+    """
     check_message = '%s is a directory...' % path_to_dir
     return result_message(path.isdir(path_to_dir), check_message)
 
 
 def check_is_module(module_name, python='python', env=None):
+    """Check whether the input name is a module.
+
+    Parameters
+    ----------
+    module_name : str
+        Name of module.
+    python : str, optional
+        Python executable (default is 'python').
+    env : dict, optional
+        Environment variables.
+
+    Returns
+    -------
+    string
+        Human-readable message.
+
+    """
     check_message = 'import %s...' % module_name
     try:
         subprocess.check_output(
@@ -82,6 +140,25 @@ def check_is_module(module_name, python='python', env=None):
 
 
 def check_is_component(module_name, component, python='python', env=None):
+    """Check whether the input name is a component.
+
+    Parameters
+    ----------
+    module_name : str
+        Name of module.
+    component : str
+        Name of component.
+    python : str, optional
+        Python executable (default is 'python').
+    env : dict, optional
+        Environment variables.
+
+    Returns
+    -------
+    string
+        Human-readable message.
+
+    """
     check_message = 'instantiate %s...' % component
     try:
         subprocess.check_output(
@@ -95,6 +172,23 @@ def check_is_component(module_name, component, python='python', env=None):
 
 
 def path_to_python_module(module_name, python='python', env=None):
+    """Get the path to the given module.
+
+    Parameters
+    ----------
+    module_name : str
+        Name of module.
+    python : str, optional
+        Python executable (default is 'python').
+    env : dict, optional
+        Environment variables.
+
+    Returns
+    -------
+    string
+        A fully qualified path, or None on error.
+
+    """
     try:
         path_to_module = subprocess.check_output(
             [python, '-c', 'import %s; print(%s.__path__)[0]' %
@@ -106,6 +200,21 @@ def path_to_python_module(module_name, python='python', env=None):
 
 
 def find_components(python='python', env=None):
+    """Get a list of components.
+
+    Parameters
+    ----------
+    python : str, optional
+        Python executable (default is 'python').
+    env : dict, optional
+        Environment variables.
+
+    Returns
+    -------
+    list
+        Component names, or an empty list if no components are found.
+
+    """
     from glob import glob
 
     path_to_mod = path_to_python_module('csdms.model', python=python,

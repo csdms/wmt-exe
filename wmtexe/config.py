@@ -1,3 +1,5 @@
+"""Tools for configuring a wmt-exe environment."""
+
 from __future__ import absolute_import
 import os
 import sys
@@ -32,6 +34,9 @@ _DEFAULTS = [
 
 
 class SiteConfiguration(object):
+
+    """Configure a wmt-exe environment."""
+
     def __init__(self):
         from ConfigParser import ConfigParser
 
@@ -43,15 +48,48 @@ class SiteConfiguration(object):
         self._config = config
 
     def section(self, section):
+        """Get the all the values of a section in the configuration.
+
+        Parameters
+        ----------
+        section : str
+            Name of section in configuration.
+
+        Returns
+        -------
+        list of tuples :
+            Configuration values of section.
+
+        """
         return self._config.items(section)
 
     def set(self, section, option, value):
+        """Set a configuration value.
+
+        Parameters
+        ----------
+        section : str
+            Name of section in configuration.
+        option : str
+            Name of configuration option.
+        value
+            Value to be set.
+
+        """
         if value is not None:
             if section == 'paths':
                 value = os.path.normpath(value)
             self._config.set(section, option, value)
 
     def write(self, file):
+        """Write a configuration file.
+
+        Parameters
+        ----------
+        file : str
+            Name of configuration file.
+
+        """
         if isinstance(file, types.StringTypes):
             with open(file, 'w') as fp:
                 self.write(fp)
@@ -60,6 +98,19 @@ class SiteConfiguration(object):
 
     @classmethod
     def from_path(clazz, filenames):
+        """Create a SiteConfiguration instance from a file or files.
+
+        Parameters
+        ----------
+        filename : str or array-like of str
+            Configuration file(s).
+
+        Returns
+        -------
+        SiteConfiguration
+            A SiteConfiguration object.
+
+        """
         conf = clazz()
         conf._config.read(filenames)
         return conf
@@ -81,6 +132,19 @@ USER_CONFIG_PATH = os.path.expanduser('~/.wmt')
 
 
 def load_configuration(filenames=None):
+    """Load a wmt-exe configuration.
+
+    Parameters
+    ----------
+    filename : dict, optional
+        Configuration files.
+
+    Returns
+    -------
+    SiteConfiguration :
+        The configuration.
+
+    """
     paths = filenames or ['wmt.cfg',
                           os.path.join(USER_CONFIG_PATH, 'wmt.cfg'),
                           os.path.join(INSTALL_ETC, 'wmt.cfg'),
