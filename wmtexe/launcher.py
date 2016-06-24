@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 from types import StringTypes
 
@@ -45,7 +46,8 @@ class Launcher(object):
         import shlex
         from pipes import quote
 
-        command = ['/home/csdms/wmt/topoflow.1/conda/bin/wmt-slave', quote(self.sim_id)] + self._extra_args
+        wmt_slave = os.path.join(sys.prefix, 'bin', 'wmt-slave')
+        command = [wmt_slave, quote(self.sim_id)] + self._extra_args
 
         if extra_args:
             if isinstance(extra_args, StringTypes):
