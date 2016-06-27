@@ -57,7 +57,7 @@ class SiteConfiguration(object):
 
         Returns
         -------
-        list of tuples :
+        list of tuples
             Configuration values of section.
 
         """
@@ -136,12 +136,12 @@ def load_configuration(filenames=None):
 
     Parameters
     ----------
-    filename : dict, optional
+    filenames : dict, optional
         Configuration files.
 
     Returns
     -------
-    SiteConfiguration :
+    SiteConfiguration
         The configuration.
 
     """
