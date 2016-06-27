@@ -16,8 +16,9 @@ def audit(environ):
 
     Returns
     -------
-    string :
+    str
         Warnings/errors.
+
     """
     from os import linesep
 
@@ -64,7 +65,7 @@ def result_message(assertion, checking):
 
     Returns
     -------
-    string
+    str
         Human-readable message.
 
     """
@@ -84,7 +85,7 @@ def check_is_executable(program):
 
     Returns
     -------
-    string
+    str
         Human-readable message.
 
     """
@@ -102,7 +103,7 @@ def check_is_dir(path_to_dir):
 
     Returns
     -------
-    string
+    str
         Human-readable message.
 
     """
@@ -124,7 +125,7 @@ def check_is_module(module_name, python='python', env=None):
 
     Returns
     -------
-    string
+    str
         Human-readable message.
 
     """
@@ -155,7 +156,7 @@ def check_is_component(module_name, component, python='python', env=None):
 
     Returns
     -------
-    string
+    str
         Human-readable message.
 
     """
@@ -185,7 +186,7 @@ def path_to_python_module(module_name, python='python', env=None):
 
     Returns
     -------
-    string
+    str
         A fully qualified path, or None on error.
 
     """
