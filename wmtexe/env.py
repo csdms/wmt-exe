@@ -1,3 +1,5 @@
+"""Classes for configuring a wmt-exe environment."""
+
 import sys
 from os import path, pathsep, linesep
 from collections import OrderedDict
@@ -8,6 +10,15 @@ from .config import load_configuration
 
 
 class Babel(object):
+
+    """CCA Babel configuration.
+
+    Parameters
+    ----------
+    **kwds
+        Arbitrary keyword arguments.
+
+    """
     def __init__(self, **kwds):
         prefix = kwds.get('prefix', '')
         babel_config = kwds.get('babel_config', 'babel-config')
@@ -22,21 +33,38 @@ class Babel(object):
 
     @property
     def babel_config(self):
+        """Babel configuration values."""
         return self._babel_config
 
     @property
     def cca_spec_babel_config(self):
+        """cca-spec-babel configuration values."""
         return self._cca_spec_babel_config
 
     @property
     def prefix(self):
+        """Prefix used for Babel installation."""
         return self._prefix
 
     @property
     def libs(self):
+        """Libraries used with cca-spec-babel."""
         return self._libs
 
     def query_var(self, var):
+        """Query a Babel configuration variable.
+
+        Parameters
+        ----------
+        var : str
+            Variable name.
+
+        Returns
+        -------
+        str
+            Variable information, or None on error.
+
+        """
         try:
             return subprocess.check_output(
                 [self.babel_config, '--query-var=%s' % var]).strip()
@@ -44,6 +72,19 @@ class Babel(object):
             return None
 
     def query_cca_spec_var(self, var):
+        """Query a cca-spec-babel configuration variable.
+
+        Parameters
+        ----------
+        var : str
+            Variable name.
+
+        Returns
+        -------
+        str
+            Variable information, or None on error.
+
+        """
         try:
             return subprocess.check_output(
                 [self.cca_spec_babel_config, '--var', var]).strip()
@@ -54,6 +95,15 @@ class Babel(object):
 
 
 class Python(object):
+
+    """Python configuration.
+
+    Parameters
+    ----------
+    python : str, optional
+        Python executable (default is 'python').
+
+    """
     def __init__(self, python='python'):
         self._python = python
         self._version = self.query_version()
@@ -61,24 +111,41 @@ class Python(object):
 
     @property
     def executable(self):
+        """Python executable."""
         return self._python
 
     @property
     def prefix(self):
+        """Prefix for Python installation."""
         return self._prefix
 
     @property
     def version(self):
+        """Python version."""
         return self._version
 
     def site_packages(self, prefix=None):
+        """Path to Python `site-packages` directory.
+
+        Parameters
+        ----------
+        prefix : str, optional
+            Prefix for Python distribution.
+
+        Returns
+        -------
+        str
+            Path to `site-packages` directory.
+
+        """
         return path.join(prefix or self.prefix, 'lib', self.version,
                          'site-packages')
     
     @property
     def lib(self):
+        """Path to Python `lib` directory."""
         return path.join(self.prefix, 'lib')
-    
+
     def query_version(self):
         """Get the version of Python.
 
@@ -91,32 +158,68 @@ class Python(object):
 
         Returns
         -------
-        string :
+        str
             The Python version as a string.
+
         """
         version = subprocess.check_output(
             [self.executable, '-c', 'import sys; print(sys.version[:3])'])
         return 'python%s' % version.strip()
 
     def query_exec_prefix(self):
+        """Get the path to the Python executables directory.
+
+        Returns
+        -------
+        str
+            The Python exec path prefix.
+
+        """
         prefix = subprocess.check_output(
             [self.executable, '-c', 'import sys; print(sys.exec_prefix)'])
         return path.normpath(prefix.strip())
 
 
 class WmtEnvironment(object):
+
+    """WMT executor configuration."""
+
     def __init__(self):
         self._env = {}
 
     @property
     def env(self):
+        """WMT environment variables."""
         return OrderedDict(self._env)
 
     def to_dict(self):
+        """Converts WMT environment variables to an OrderedDict.
+
+        Returns
+        -------
+        OrderedDict
+            WMT environment variables.
+
+        """
         return OrderedDict(self._env)
 
     @classmethod
     def from_dict(clazz, *args, **kwds):
+        """Loads WMT environment variables from arguments.
+
+        Parameters
+        ----------
+        *args
+            Variable length argument list.
+        *kwds
+            Arbitrary keyword arguments.
+
+        Returns
+        -------
+        WmtEnvironment
+            A WmtEnvironment instance.
+        
+        """
         env = clazz()
 
         d = dict(*args, **kwds)
@@ -164,6 +267,19 @@ class WmtEnvironment(object):
 
     @classmethod
     def from_config(clazz, filenames):
+        """Loads WMT environment variables from configuration files.
+
+        Parameters
+        ----------
+        filenames : dict
+            Configuration file(s).
+
+        Returns
+        -------
+        WmtEnvironment
+            A WmtEnvironment instance.
+        
+        """
         env = clazz()
 
         conf = load_configuration(filenames)
