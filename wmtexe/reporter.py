@@ -219,7 +219,7 @@ class Reporter(threading.Thread):
         A unique UUID for a job.
     server : str
         URL of API server.
-    fname : str
+    filename : str
         Name of status file.
     **kwds
         Arbitrary keyowrd arguments.
