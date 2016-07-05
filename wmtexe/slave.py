@@ -1,4 +1,5 @@
 """Tools to initiate and monitor tasks in a wmt-exe environment."""
+
 import os
 import argparse
 import tarfile
@@ -30,7 +31,7 @@ class Slave(object):
     ----------
     url : str
         URL of API server.
-    env : dict, optional
+    env : WmtEnvironment, optional
         WMT environment variables (default is None).
     dir : str, optional
         The working directory for the job (default is current directory). 
@@ -59,7 +60,7 @@ class Slave(object):
         ----------
         id : str
             The unique UUID for the job.
-        env : dict, optional
+        env : WmtEnvironment, optional
             WMT environment variables (default is None).
         dir : str, optional
             The working directory for the job (default is current directory). 
