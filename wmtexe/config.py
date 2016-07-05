@@ -34,9 +34,7 @@ _DEFAULTS = [
 
 
 class SiteConfiguration(object):
-
     """Configure a wmt-exe environment."""
-
     def __init__(self):
         from ConfigParser import ConfigParser
 

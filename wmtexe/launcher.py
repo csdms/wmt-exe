@@ -7,7 +7,6 @@ from types import StringTypes
 
 
 class Launcher(object):
-
     """Job launcher for a wmt-exe environment.
 
     Parameters
@@ -162,9 +161,7 @@ class Launcher(object):
 
 
 class QsubLauncher(Launcher):
-
     """WMT job launcher for a PBS scheduler."""
-
     _script = """
 #! /bin/bash
 #PBS -q debug
@@ -198,9 +195,7 @@ cd $TMPDIR
 
 
 class BashLauncher(Launcher):
-
     """WMT job launcher for a bash environment."""
-
     _script = """
 #! /bin/bash
 

@@ -10,7 +10,6 @@ from .config import load_configuration
 
 
 class Babel(object):
-
     """CCA Babel configuration.
 
     Parameters
@@ -95,7 +94,6 @@ class Babel(object):
 
 
 class Python(object):
-
     """Python configuration.
 
     Parameters
@@ -181,9 +179,7 @@ class Python(object):
 
 
 class WmtEnvironment(object):
-
     """WMT executor configuration."""
-
     def __init__(self):
         self._env = {}
 
