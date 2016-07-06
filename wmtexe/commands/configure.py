@@ -1,3 +1,5 @@
+"""Configures a wmt-exe environment with setuptools."""
+
 from __future__ import absolute_import
 
 from setuptools import Command
