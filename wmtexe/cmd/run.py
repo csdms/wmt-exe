@@ -1,3 +1,5 @@
+"""Run a simulation from an existing WMT configuration."""
+
 import os
 import argparse
 
@@ -32,8 +34,7 @@ def main():
     import argparse
     import traceback
 
-    parser = argparse.ArgumentParser(
-        description="Run a WMT simulation")
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('path', help='Path to simulation directory')
 
     parser.add_argument('--config', default=None,

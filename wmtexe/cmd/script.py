@@ -1,3 +1,5 @@
+"""Launch a WMT simulation using `bash` or `qsub`."""
+
 from __future__ import print_function
 import sys
 import os
@@ -14,7 +16,7 @@ _LAUNCHERS = {
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument('uuid', type=str,
                         help='Unique identifier for simulation')

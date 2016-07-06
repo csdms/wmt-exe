@@ -1,3 +1,5 @@
+"""Get information about the current wmt-exe environment."""
+
 import sys
 
 
@@ -28,10 +30,10 @@ def hostname():
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--ssh-port', default=22, help='SSH port to use')
     parser.add_argument('--directory', default=sys.exec_prefix,
-                        help='directory of wmt installation')
+                        help='directory of WMT installation')
     parser.add_argument('--host', default=hostname(),
                         help='FQHN of wmt execution server')
 

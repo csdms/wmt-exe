@@ -1,3 +1,5 @@
+"""Configure a wmt-exe environment from the command prompt."""
+
 import os
 from distutils.spawn import find_executable
 
@@ -117,7 +119,7 @@ def prompt_for_qsub_launcher(**kwds):
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--batch', action='store_true', default=False,
                        help='run in batch mode')
 
