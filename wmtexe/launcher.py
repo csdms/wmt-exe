@@ -30,10 +30,9 @@ class Launcher(object):
 
     def __init__(self, sim_id):
         self.sim_id = sim_id
-        self.script_path =
-        os.path.expanduser(os.path.join(self.launch_dir,
-                                        '%s.sh' %
-                                        self.sim_id))
+        self.script_path = os.path.expanduser(
+            os.path.join(self.launch_dir,
+                         '%s.sh' % self.sim_id))
 
     def before_launch(self, **kwds):
         """Perform actions before launching job.
