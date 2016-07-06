@@ -1,3 +1,5 @@
+"""Execute a WMT simulation."""
+
 import os
 import sys
 import subprocess
@@ -9,7 +11,7 @@ def main():
     import argparse
     import traceback
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('id', help='run ID')
     parser.add_argument('--server-url',
                         default='https://csdms.colorado.edu/wmt/api-dev',

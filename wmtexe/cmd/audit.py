@@ -1,3 +1,5 @@
+"""Audit the setup for a WMT simulation."""
+
 from .. import formatting
 from ..env import WmtEnvironment
 from ..audit import audit
@@ -6,7 +8,7 @@ from ..audit import audit
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument('file', nargs='?', type=str, default=None,
                         help='WMT config file')

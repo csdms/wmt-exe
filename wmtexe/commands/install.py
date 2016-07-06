@@ -1,3 +1,5 @@
+"""Installs wmt-exe with setuptools."""
+
 from setuptools.command.install import install
 import os
 
