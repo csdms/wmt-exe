@@ -19,7 +19,9 @@ import shlex
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+# sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('./numpydoc'))
 
 # -- General configuration ------------------------------------------------
 
@@ -36,6 +38,9 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.mathjax',
+    'numpydoc'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -53,7 +58,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'The Web Modeling Tool execution server'
+project = u'wmt-exe'
 copyright = u'2016, CSDMS'
 author = u'CSDMS'
 
@@ -115,15 +120,15 @@ todo_include_todos = True
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'alabaster'
+html_theme = 'sphinxdoc'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
-#html_theme_path = []
+html_theme_path = []
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
@@ -207,7 +212,7 @@ html_static_path = ['_static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'TheWebModelingToolexecutionserverdoc'
+htmlhelp_basename = 'wmt-exe-doc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -229,7 +234,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'TheWebModelingToolexecutionserver.tex', u'The Web Modeling Tool execution server Documentation',
+  (master_doc, 'wmt-exe.tex', u'The WMT Execution Server Documentation',
    u'CSDMS', 'manual'),
 ]
 
@@ -259,7 +264,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'thewebmodelingtoolexecutionserver', u'The Web Modeling Tool execution server Documentation',
+    (master_doc, 'wmt-exe', u'The WMT Execution Server Documentation',
      [author], 1)
 ]
 
@@ -273,8 +278,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'TheWebModelingToolexecutionserver', u'The Web Modeling Tool execution server Documentation',
-   author, 'TheWebModelingToolexecutionserver', 'One line description of project.',
+  (master_doc, 'wmt-exe', u'The WMT Execution Server Documentation',
+   author, 'wmt-exe', 'One line description of project.',
    'Miscellaneous'),
 ]
 
@@ -293,3 +298,13 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
+
+#
+# MP
+#
+
+# Turn off missing reference warnings.
+numpydoc_class_members_toctree = False
+
+# Use Eric's CSDMS CSS.
+html_style = 'csdms.css'
