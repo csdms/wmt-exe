@@ -306,7 +306,7 @@ def download_run_tarball(server, uuid, dest_dir='.'):
     if resp.status_code == 200:
         dest_name = os.path.join(dest_dir, uuid + '.tar.gz')
         with open(dest_name, 'wb') as fp:
-            for chunk in resp.iter_content():
+            for chunk in resp.iter_content(chunk_size=8192):
                 if chunk:  # filter out keep-alive new chunks
                     fp.write(chunk)
                     fp.flush()
