@@ -2,6 +2,7 @@
 
 import os
 import sys
+import stat
 import subprocess
 from types import StringTypes
 
@@ -45,6 +46,7 @@ class Launcher(object):
         """
         with open(self.script_path, 'w') as f:
             f.write(self.script(**kwds))
+        os.chmod(self.script_path, stat.S_IXUSR|stat.S_IWUSR|stat.S_IRUSR)
 
     def after_launch(self, **kwds):
         """Perform actions after launching job.
