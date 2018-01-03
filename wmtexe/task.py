@@ -8,6 +8,7 @@ import shutil
 import json
 import threading
 import logging
+import requests
 
 from cmt.component.model import Model
 from cmt.framework.services import register_component_classes
@@ -276,8 +277,8 @@ class __open_reporter(object):
             reporter.report('error', 'THERE WAS AN ERROR!!!')
 
 
-def download_run_tarball(server, uuid, dest_dir='.'):
-    """Download tarball of simulation output.
+def create_run_tarball(server, uuid):
+    """Create a tarball of simulation inputs on a server.
 
     Parameters
     ----------
@@ -285,6 +286,29 @@ def download_run_tarball(server, uuid, dest_dir='.'):
         URL of API server.
     uuid : str
         The unique UUID for the job.
+
+    Returns
+    -------
+    dict
+        Information about the tarball.
+
+    """
+    url = os.path.join(server, 'package/create')
+    resp = requests.post(url, data={'uuid': uuid, 'filename': ''})
+
+    if resp.status_code != 200:
+        raise DownloadError(resp.status_code, url + ':' + uuid + '.tar.gz')
+
+    return json.loads(resp.content)
+
+
+def download_run_tarball(info, dest_dir='.'):
+    """Download a tarball of simulation inputs from a server.
+
+    Parameters
+    ----------
+    info : dict
+        Information about the tarball.
     dest_dir : str, optional
         Path to download directory (default is current directory).
 
@@ -294,26 +318,35 @@ def download_run_tarball(server, uuid, dest_dir='.'):
         Full path to downloaded tarball.
 
     """
-    import requests
+    url = os.path.join(info['url'], info['filename'])
+    resp = requests.post(url, stream=True)
 
-    url = os.path.join(server, 'run/download')
-    resp = requests.post(url, stream=True,
-                         data={
-                             'uuid': uuid,
-                             'filename': '',
-                         })
+    if resp.status_code != 200:
+        raise DownloadError(resp.status_code, url + ':' + info['filename'])
 
-    if resp.status_code == 200:
-        dest_name = os.path.join(dest_dir, uuid + '.tar.gz')
-        with open(dest_name, 'wb') as fp:
-            for chunk in resp.iter_content(chunk_size=8192):
-                if chunk:  # filter out keep-alive new chunks
-                    fp.write(chunk)
-                    fp.flush()
-    else:
-        raise DownloadError(resp.status_code, url + ':' + uuid + '.tar.gz')
+    dest_name = os.path.join(dest_dir, info['filename'])
+    with open(dest_name, 'wb') as fp:
+        for chunk in resp.iter_content(chunk_size=8192):
+            if chunk:  # filter out keep-alive new chunks
+                fp.write(chunk)
+                fp.flush()
 
     return dest_name
+
+
+def delete_run_tarball(server, uuid):
+    """Delete a tarball of simulation inputs on a server.
+
+    Parameters
+    ----------
+    server : str
+        URL of API server.
+    uuid : str
+        The unique UUID for the job.
+
+    """
+    url = os.path.join(server, 'package/delete', uuid)
+    resp = requests.post(url)
 
 
 def upload_run_tarball(server, tarball):
@@ -687,8 +720,10 @@ class RunTask(WmtTaskReporter):
             Path to downloaded tarball.
 
         """
-        ans = download_run_tarball(self._server, self.id, dest_dir=dest_dir)
-        return ans
+        info = create_run_tarball(self._server, self.id)
+        tarball = download_run_tarball(info, dest_dir=dest_dir)
+        delete_run_tarball(self._server, self.id)
+        return tarball
 
     def unpack_tarball(self, path):
         """Extract contents of tarball of simulation output.

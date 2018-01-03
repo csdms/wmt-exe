@@ -65,8 +65,8 @@ def total_seconds(dt):
             (dt.seconds + dt.days * 24 * 3600.) * 1e6) / 1e6
 
 
-def miniconda_url(version='3.7.0', python='', url=None):
-    url = url or 'http://repo.continuum.io/miniconda'
+def miniconda_url(version='latest', python='2', url=None):
+    url = url or 'https://repo.continuum.io/miniconda'
 
     if is_linux_os():
         os = 'Linux-x86_64'
