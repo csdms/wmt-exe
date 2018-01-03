@@ -204,3 +204,4 @@ class BashLauncher(Launcher):
 
 {slave_command}
 """.strip()
+    _extra_args = ['--server-url=https://csdms.colorado.edu/wmt/api-testing']
