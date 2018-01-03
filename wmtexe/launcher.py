@@ -200,8 +200,29 @@ class BashLauncher(Launcher):
     _script = """
 #! /bin/bash
 
-# source $(wmt-activate)
+export PATH={wmt_path}
 
 {slave_command}
 """.strip()
     _extra_args = ['--server-url=https://csdms.colorado.edu/wmt/api-testing']
+
+    def prepend_path(self):
+        return os.pathsep.join([os.path.join(sys.prefix, 'bin'),
+                                os.environ['PATH']])
+
+    def script(self, **kwds):
+        """Generate the launch script.
+
+        Parameters
+        ----------
+        *kwds
+            Arbitrary keyword arguments.
+
+        Returns
+        -------
+        str
+            The launch script to be written to a file.
+
+        """
+        return self._script.format(wmt_path=self.prepend_path(),
+                                   slave_command=self.slave_command(**kwds))
