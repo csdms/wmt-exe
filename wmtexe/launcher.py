@@ -207,6 +207,7 @@ export PATH={wmt_path}
     _extra_args = ['--server-url=https://csdms.colorado.edu/wmt/api-testing']
 
     def prepend_path(self):
+        """Places the `bin` directory of executor at the front of the path."""
         return os.pathsep.join([os.path.join(sys.prefix, 'bin'),
                                 os.environ['PATH']])
 
