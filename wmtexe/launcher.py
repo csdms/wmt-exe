@@ -2,6 +2,7 @@
 
 import os
 import sys
+import stat
 import subprocess
 from types import StringTypes
 
@@ -45,6 +46,7 @@ class Launcher(object):
         """
         with open(self.script_path, 'w') as f:
             f.write(self.script(**kwds))
+        os.chmod(self.script_path, stat.S_IXUSR|stat.S_IWUSR|stat.S_IRUSR)
 
     def after_launch(self, **kwds):
         """Perform actions after launching job.
@@ -198,7 +200,30 @@ class BashLauncher(Launcher):
     _script = """
 #! /bin/bash
 
-# source $(wmt-activate)
+export PATH={wmt_path}
 
 {slave_command}
 """.strip()
+    _extra_args = ['--server-url=https://csdms.colorado.edu/wmt/api-testing']
+
+    def prepend_path(self):
+        """Places the `bin` directory of executor at the front of the path."""
+        return os.pathsep.join([os.path.join(sys.prefix, 'bin'),
+                                os.environ['PATH']])
+
+    def script(self, **kwds):
+        """Generate the launch script.
+
+        Parameters
+        ----------
+        *kwds
+            Arbitrary keyword arguments.
+
+        Returns
+        -------
+        str
+            The launch script to be written to a file.
+
+        """
+        return self._script.format(wmt_path=self.prepend_path(),
+                                   slave_command=self.slave_command(**kwds))
