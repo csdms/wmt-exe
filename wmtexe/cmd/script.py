@@ -36,5 +36,5 @@ def main():
     if args.run:
         launcher.run()
     else:
-        print(launcher.script())
+        print(launcher.script().strip())
 

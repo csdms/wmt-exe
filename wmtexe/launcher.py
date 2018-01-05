@@ -181,7 +181,7 @@ class QsubLauncher(Launcher):
 cd $TMPDIR
 
 {slave_command}
-""".strip()
+"""
     _extra_args = ['--exec-dir=$TMPDIR']
 
     def launch_command(self, **kwds):
@@ -210,7 +210,7 @@ class BashLauncher(Launcher):
 export PATH={wmt_path}
 
 {slave_command}
-""".strip()
+"""
 
     def prepend_path(self):
         """Places the `bin` directory of executor at the front of the path."""
