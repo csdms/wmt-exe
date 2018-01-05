@@ -22,6 +22,8 @@ def main():
                         help='Unique identifier for simulation')
     parser.add_argument('--extra-args', default='',
                         help='Extra arguments for wmt-slave command')
+    parser.add_argument('--server-url', default='',
+                        help='WMT API server URL')
     parser.add_argument('--launcher', choices=_LAUNCHERS.keys(),
                         default='bash', help='Launch method')
     parser.add_argument('--run', action='store_true',
@@ -29,7 +31,8 @@ def main():
 
     args = parser.parse_args()
 
-    launcher = _LAUNCHERS[args.launcher](args.uuid)
+    launcher = _LAUNCHERS[args.launcher](args.uuid,
+                                         server_url=args.server_url)
     if args.run:
         launcher.run()
     else:
