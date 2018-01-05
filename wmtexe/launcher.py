@@ -14,6 +14,8 @@ class Launcher(object):
     ----------
     sim_id : str
         A unique UUID for the job.
+    server_url : str or None, optional
+        The URL of the WMT API server from which the job was submitted.
 
     Attributes
     ----------
@@ -23,14 +25,17 @@ class Launcher(object):
         Path to launch script.
     sim_id : str
         A unique UUID for the job.
+    server_url : str or None
+        The URL of the WMT API server from which the job was submitted.
 
     """
     launch_dir = '~/.wmt'
     _script = "{slave_command}"
     _extra_args = []
 
-    def __init__(self, sim_id):
+    def __init__(self, sim_id, server_url=None):
         self.sim_id = sim_id
+        self.server_url = server_url
         self.script_path = os.path.expanduser(
             os.path.join(self.launch_dir,
                          '%s.sh' % self.sim_id))
@@ -137,6 +142,9 @@ class Launcher(object):
         wmt_slave = os.path.join(sys.prefix, 'bin', 'wmt-slave')
         command = [wmt_slave, quote(self.sim_id)] + self._extra_args
 
+        if self.server_url:
+            command += ['--server-url={}'.format(self.server_url)]
+
         if extra_args:
             if isinstance(extra_args, StringTypes):
                 extra_args = shlex.split(extra_args)
@@ -173,9 +181,8 @@ class QsubLauncher(Launcher):
 cd $TMPDIR
 
 {slave_command}
-""".strip()
-    _extra_args = ['--exec-dir=$TMPDIR',
-                   '--server-url=https://csdms.colorado.edu/wmt/api-testing']
+""".lstrip()
+    _extra_args = ['--exec-dir=$TMPDIR']
 
     def launch_command(self, **kwds):
         """Path to launch script.
@@ -203,8 +210,7 @@ class BashLauncher(Launcher):
 export PATH={wmt_path}
 
 {slave_command}
-""".strip()
-    _extra_args = ['--server-url=https://csdms.colorado.edu/wmt/api-testing']
+""".lstrip()
 
     def prepend_path(self):
         """Places the `bin` directory of executor at the front of the path."""
