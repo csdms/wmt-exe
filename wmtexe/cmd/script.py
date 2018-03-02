@@ -4,12 +4,13 @@ from __future__ import print_function
 import sys
 import os
 
-from ..launcher import BashLauncher, QsubLauncher
+from ..launcher import BashLauncher, QsubLauncher, SbatchLauncher
 
 
 _LAUNCHERS = {
     'bash': BashLauncher,
     'qsub': QsubLauncher,
+    'sbatch': SbatchLauncher,
 }
 
 

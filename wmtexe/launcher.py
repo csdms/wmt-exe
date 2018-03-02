@@ -202,6 +202,37 @@ cd $TMPDIR
                 self.script_path]
 
 
+class SbatchLauncher(Launcher):
+    """WMT job launcher for a SLURM scheduler."""
+    _script = """
+#!/usr/bin/env bash
+
+module load slurm/blanca
+
+{slave_command}
+""".lstrip()
+
+    def launch_command(self, **kwds):
+        """Path to launch script.
+
+        Parameters
+        ----------
+        **kwds
+            Arbitrary keyword arguments.
+
+        Returns
+        -------
+        str
+            The launch command to execute.
+
+        """
+        return ['sbatch',
+                '--qos', 'blanca-csdms',
+                '--workdir', self.launch_dir,
+                '--job-name', 'wmt-{}'.format(self.sim_id),
+                self.script_path]
+
+
 class BashLauncher(Launcher):
     """WMT job launcher for a bash environment."""
     _script = """
