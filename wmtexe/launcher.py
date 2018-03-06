@@ -206,8 +206,9 @@ class SbatchLauncher(Launcher):
     """WMT job launcher for a SLURM scheduler."""
     _script = """
 #!/usr/bin/env bash
-
-module load slurm/blanca
+#SBATCH --qos=blanca-csdms
+#SBATCH --job-name=wmt
+#SBATCH --output=wmt-%j.out
 
 {slave_command}
 """.lstrip()
@@ -226,11 +227,18 @@ module load slurm/blanca
             The launch command to execute.
 
         """
-        return ['sbatch',
-                '--qos', 'blanca-csdms',
-                '--workdir', self.launch_dir,
-                '--job-name', 'wmt-{}'.format(self.sim_id),
-                self.script_path]
+        return 'module load slurm/blanca && sbatch {}'.format(self.script_path)
+
+    def launch(self, **kwds):
+        """Launch job with launch command.
+
+        Parameters
+        ----------
+        **kwds
+            Arbitrary keyword arguments.
+
+        """
+        subprocess.check_output(self.launch_command(**kwds), shell=True)
 
 
 class BashLauncher(Launcher):
