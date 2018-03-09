@@ -212,33 +212,33 @@ class SbatchLauncher(Launcher):
 
 {slave_command}
 """.lstrip()
+    _run_script = """
+#!/usr/bin/env bash
+
+module load slurm/blanca
+sbatch {script_path}
+""".lstrip()
+
+    def __init__(self, *args, **kwds):
+        Launcher.__init__(self, *args, **kwds)
+        self.run_script_path = os.path.expanduser(
+            os.path.join(self.launch_dir,
+                         '%s.run.sh' % self.sim_id))
+
+    def before_launch(self, **kwds):
+        Launcher.before_launch(self, **kwds)
+        with open(self.run_script_path, 'w') as f:
+            f.write(self.run_script(**kwds))
+        os.chmod(self.run_script_path, stat.S_IXUSR|stat.S_IWUSR|stat.S_IRUSR)
+
+    def run_script(self, **kwds):
+        return self._run_script.format(script_path=self.script_path)
 
     def launch_command(self, **kwds):
-        """Path to launch script.
-
-        Parameters
-        ----------
-        **kwds
-            Arbitrary keyword arguments.
-
-        Returns
-        -------
-        str
-            The launch command to execute.
-
-        """
-        return 'module load slurm/blanca && sbatch {}'.format(self.script_path)
+        return self.run_script_path
 
     def launch(self, **kwds):
-        """Launch job with launch command.
-
-        Parameters
-        ----------
-        **kwds
-            Arbitrary keyword arguments.
-
-        """
-        subprocess.check_output(self.launch_command(**kwds), shell=True)
+        os.system(self.launch_command())
 
 
 class BashLauncher(Launcher):
