@@ -210,6 +210,7 @@ class SbatchLauncher(Launcher):
 #SBATCH --job-name=wmt
 #SBATCH --output=wmt-%j.out
 
+export MPLBACKEND=Agg
 {slave_command}
 """.lstrip()
     _run_script = """
