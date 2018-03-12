@@ -208,7 +208,6 @@ class SbatchLauncher(Launcher):
 #!/usr/bin/env bash
 #SBATCH --qos=blanca-csdms
 #SBATCH --job-name=wmt
-#SBATCH --output=wmt-%j.out
 
 export MPLBACKEND=Agg
 {slave_command}
@@ -217,7 +216,7 @@ export MPLBACKEND=Agg
 #!/usr/bin/env bash
 
 module load slurm/blanca
-sbatch {script_path}
+sbatch --output={output_file} {script_path}
 """.lstrip()
 
     def __init__(self, *args, **kwds):
@@ -233,7 +232,11 @@ sbatch {script_path}
         os.chmod(self.run_script_path, stat.S_IXUSR|stat.S_IWUSR|stat.S_IRUSR)
 
     def run_script(self, **kwds):
-        return self._run_script.format(script_path=self.script_path)
+        output_file = os.path.expanduser(
+            os.path.join(self.launch_dir,
+                         '%s.out' % self.sim_id))
+        return self._run_script.format(output_file=output_file,
+                                       script_path=self.script_path)
 
     def launch_command(self, **kwds):
         return self.run_script_path
