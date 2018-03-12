@@ -242,7 +242,7 @@ sbatch --output={output_file} {script_path}
         return self.run_script_path
 
     def launch(self, **kwds):
-        os.system(self.launch_command())
+        subprocess.check_output(self.launch_command(**kwds))
 
 
 class BashLauncher(Launcher):
