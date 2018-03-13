@@ -107,7 +107,7 @@ class Launcher(object):
         subprocess.check_output(self.launch_command(**kwds), env={})
 
     def launch_command(self, **kwds):
-        """Path to launch script.
+        """The command that runs a job.
 
         Parameters
         ----------
@@ -203,7 +203,29 @@ cd $TMPDIR
 
 
 class SbatchLauncher(Launcher):
-    """WMT job launcher for a SLURM scheduler."""
+    """WMT job launcher for a Slurm scheduler.
+
+    Parameters
+    ----------
+    sim_id : str
+        A unique UUID for the job.
+    server_url : str or None, optional
+        The URL of the WMT API server from which the job was submitted.
+
+    Attributes
+    ----------
+    launch_dir : str
+        The working directory from which the job is started.
+    script_path : str
+        Path to launch script.
+    run_script_path : str
+        Path to run script, which submits launch script to scheduler.
+    sim_id : str
+        A unique UUID for the job.
+    server_url : str or None
+        The URL of the WMT API server from which the job was submitted.
+
+    """
     _script = """
 #!/usr/bin/env bash
 #SBATCH --qos=blanca-csdms
@@ -226,12 +248,33 @@ sbatch --output={output_file} {script_path}
                          '%s.run.sh' % self.sim_id))
 
     def before_launch(self, **kwds):
+        """Perform actions before launching job.
+
+        Parameters
+        ----------
+        **kwds
+            Arbitrary keyword arguments.
+
+        """
         Launcher.before_launch(self, **kwds)
         with open(self.run_script_path, 'w') as f:
             f.write(self.run_script(**kwds))
         os.chmod(self.run_script_path, stat.S_IXUSR|stat.S_IWUSR|stat.S_IRUSR)
 
     def run_script(self, **kwds):
+        """Generate the run script that submits job to scheduler.
+
+        Parameters
+        ----------
+        *kwds
+            Arbitrary keyword arguments.
+
+        Returns
+        -------
+        str
+            The run script to be written to a file.
+
+        """
         output_file = os.path.expanduser(
             os.path.join(self.launch_dir,
                          '%s.out' % self.sim_id))
@@ -239,9 +282,33 @@ sbatch --output={output_file} {script_path}
                                        script_path=self.script_path)
 
     def launch_command(self, **kwds):
+        """The command that runs a job.
+
+        Parameters
+        ----------
+        **kwds
+            Arbitrary keyword arguments.
+
+        Returns
+        -------
+        str
+            The launch command to execute.
+
+        """
         return self.run_script_path
 
     def launch(self, **kwds):
+        """Launch job with launch command.
+
+        Note that we override Launcher.launch because we want to
+        inherit the environment from the current process.
+
+        Parameters
+        ----------
+        **kwds
+            Arbitrary keyword arguments.
+
+        """
         subprocess.check_output(self.launch_command(**kwds))
 
 
