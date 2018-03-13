@@ -9,6 +9,7 @@ import json
 import threading
 import logging
 import requests
+import socket
 
 from cmt.component.model import Model
 from cmt.framework.services import register_component_classes
@@ -797,16 +798,17 @@ class RunComponentCoupled(RunTask):
         with open(os.path.join(self.sim_dir, 'model.yaml'), 'r') as fp:
             model = yaml.load(fp.read())
 
-        with open('.info.yaml', 'w') as fp:
+        with open('info.yaml', 'w') as fp:
             info = {
                 'start_time': datetime.now().isoformat(),
                 'server': self.server,
+                'host': socket.gethostname(),
                 'id': self.id,
                 'prefix': self.sim_dir,
                 'stdout': 'stdout',
                 'driver': model['driver'],
             }
-            yaml.dump(info, stream=fp, default_flow_style=True)
+            yaml.dump(info, stream=fp, default_flow_style=False)
 
         # driver = os.path.join(self.sim_dir, model['driver'])
         status_file = os.path.abspath('stdout')
