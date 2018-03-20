@@ -23,6 +23,7 @@ class Configure(Command):
         ('with-python=', None, 'path to python command'),
         ('wmt-prefix=', None, 'prefix of WMT installation'),
         ('components-prefix=', None, 'prefix of components installation'),
+        ('exec-dir=', None, 'location of user execution directory'),
         ('clobber', None, 'clobber existing configuration'),
     ]
 
@@ -34,6 +35,7 @@ class Configure(Command):
         self.with_cca_spec_babel_config = None
         self.wmt_prefix = None
         self.components_prefix = None
+        self.exec_dir = None
         self.clobber = False
 
     def finalize_options(self):
@@ -53,6 +55,7 @@ class Configure(Command):
                    self.with_cca_spec_babel_config)
         config.set('paths', 'wmt_prefix', self.wmt_prefix)
         config.set('paths', 'components_prefix', self.components_prefix)
+        config.set('paths', 'exec_dir', self.exec_dir)
 
         if path.isfile('wmt.cfg') and not self.clobber:
             print 'wmt.cfg: file exists (use --clobber to overwrite)'
