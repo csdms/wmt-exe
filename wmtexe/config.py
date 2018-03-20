@@ -66,6 +66,19 @@ class SiteConfiguration(object):
         """
         return self._config.items(section)
 
+    def get(self, section, option):
+        """Get a configuration value.
+
+        Parameters
+        ----------
+        section : str
+            Name of section in configuration.
+        option : str
+            Name of configuration option.
+
+        """
+        return self._config.get(section, option)
+
     def set(self, section, option, value):
         """Set a configuration value.
 
