@@ -39,10 +39,9 @@ class Launcher(object):
                  extra_args=[]):
         self.sim_id = sim_id
         self.server_url = server_url
-        self.launch_dir = launch_dir
-        self.script_path = os.path.expanduser(
-            os.path.join(self.launch_dir,
-                         '%s.sh' % self.sim_id))
+        self.launch_dir = os.path.expandvars(os.path.expanduser(launch_dir))
+        self.script_path = os.path.join(self.launch_dir,
+                                        '%s.sh' % self.sim_id)
         self._extra_args = extra_args
 
     def before_launch(self, **kwds):
