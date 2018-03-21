@@ -280,13 +280,16 @@ class WmtTaskReporter(object):
         A unique UUID for a job.
     server : str
         URL of API server.
+    exe_dir : str, optional
+        Run directory (default is '~/.wmt').
 
     """
-    def __init__(self, id, server):
+    def __init__(self, id, server, exe_dir='~/.wmt'):
         self._id = id
         self._server = server
         self._curl = os.environ.get('CURL', 'curl')
-        log_file = os.path.expanduser('~/.wmt/%s.log' % self.id)
+        self._exe_dir = os.path.expandvars(os.path.expanduser(exe_dir))
+        log_file = os.path.join(self._exe_dir, '%s.log' % self.id)
         logging.basicConfig(filename=log_file, filemode='w',
                             level=logging.DEBUG)
 
