@@ -182,7 +182,6 @@ cd $TMPDIR
 
 {slave_command}
 """.lstrip()
-    _extra_args = ['--exec-dir=$TMPDIR']
 
     def launch_command(self, **kwds):
         """Path to launch script.
