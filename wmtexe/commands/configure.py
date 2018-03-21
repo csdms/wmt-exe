@@ -23,7 +23,8 @@ class Configure(Command):
         ('with-python=', None, 'path to python command'),
         ('wmt-prefix=', None, 'prefix of WMT installation'),
         ('components-prefix=', None, 'prefix of components installation'),
-        ('exec-dir=', None, 'location of user execution directory'),
+        ('launch-dir=', None, 'directory from which job is started'),
+        ('exec-dir=', None, 'directory where job is run'),
         ('clobber', None, 'clobber existing configuration'),
     ]
 
@@ -35,6 +36,7 @@ class Configure(Command):
         self.with_cca_spec_babel_config = None
         self.wmt_prefix = None
         self.components_prefix = None
+        self.launch_dir = None
         self.exec_dir = None
         self.clobber = False
 
@@ -55,6 +57,7 @@ class Configure(Command):
                    self.with_cca_spec_babel_config)
         config.set('paths', 'wmt_prefix', self.wmt_prefix)
         config.set('paths', 'components_prefix', self.components_prefix)
+        config.set('paths', 'launch_dir', self.launch_dir)
         config.set('paths', 'exec_dir', self.exec_dir)
 
         if path.isfile('wmt.cfg') and not self.clobber:

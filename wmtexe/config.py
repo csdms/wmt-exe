@@ -28,6 +28,7 @@ _DEFAULTS = [
         ('wmt_prefix', '/usr/local'),
         ('components_prefix', '/usr/local'),
         ('exec_dir', USER_CONFIG_PATH),
+        ('launch_dir', USER_CONFIG_PATH),
     ]),
     ('launcher', [
         ('name', 'bash-launcher'),
