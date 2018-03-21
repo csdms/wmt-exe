@@ -6,10 +6,6 @@ import sys
 import types
 
 
-INSTALL_ETC = os.path.join(sys.exec_prefix, 'etc')
-USER_CONFIG_PATH = os.path.expanduser('~/.wmt')
-
-
 def _find_executable(executable, **kwds):
     from distutils.spawn import find_executable
 
@@ -27,8 +23,8 @@ _DEFAULTS = [
         ('python', _find_executable('python')),
         ('wmt_prefix', '/usr/local'),
         ('components_prefix', '/usr/local'),
-        ('exec_dir', USER_CONFIG_PATH),
-        ('launch_dir', USER_CONFIG_PATH),
+        ('exec_dir', '~/.wmt'),
+        ('launch_dir', '~/.wmt'),
     ]),
     ('launcher', [
         ('name', 'bash-launcher'),
@@ -141,6 +137,10 @@ class SiteConfiguration(object):
         output.close()
 
         return contents.strip()
+
+
+INSTALL_ETC = os.path.join(sys.exec_prefix, 'etc')
+USER_CONFIG_PATH = os.path.expanduser('~/.wmt')
 
 
 def load_configuration(filenames=None):
