@@ -39,10 +39,15 @@ def main():
     launch_dir = config.get('paths', 'launch_dir')
     exec_dir = config.get('paths', 'exec_dir')
 
+    extra_args = []
+    extra_args.append('--exec-dir={}'.format(exec_dir))
+    if args.extra_args:
+        extra_args.append(args.extra_args)
+
     launcher = _LAUNCHERS[args.launcher](args.uuid,
                                          server_url=args.server_url,
                                          launch_dir=launch_dir,
-                                         exec_dir=exec_dir)
+                                         extra_args=extra_args)
     if args.run:
         launcher.run()
     else:
