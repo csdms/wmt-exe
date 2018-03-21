@@ -16,6 +16,10 @@ class Launcher(object):
         A unique UUID for the job.
     server_url : str or None, optional
         The URL of the WMT API server from which the job was submitted.
+    launch_dir : str, optional
+        The working directory from which the job is started.
+    exec_dir : str, optional
+        The directory where the job is run.
 
     Attributes
     ----------
@@ -29,16 +33,18 @@ class Launcher(object):
         The URL of the WMT API server from which the job was submitted.
 
     """
-    launch_dir = '~/.wmt'
     _script = "{slave_command}"
     _extra_args = []
 
-    def __init__(self, sim_id, server_url=None):
+    def __init__(self, sim_id, server_url=None, launch_dir='~/.wmt',
+                 exec_dir='~/.wmt'):
         self.sim_id = sim_id
         self.server_url = server_url
+        self.launch_dir = launch_dir
         self.script_path = os.path.expanduser(
             os.path.join(self.launch_dir,
                          '%s.sh' % self.sim_id))
+        self._extra_args.append('--exec-dir={}'.format(exec_dir))
 
     def before_launch(self, **kwds):
         """Perform actions before launching job.
@@ -210,6 +216,10 @@ class SbatchLauncher(Launcher):
         A unique UUID for the job.
     server_url : str or None, optional
         The URL of the WMT API server from which the job was submitted.
+    launch_dir : str, optional
+        The working directory from which the job is started.
+    exec_dir : str, optional
+        The directory where the job is run.
 
     Attributes
     ----------
