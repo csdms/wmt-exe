@@ -28,7 +28,7 @@ def main():
                         help='WMT API server URL')
     parser.add_argument('--launcher', choices=_LAUNCHERS.keys(),
                         default='bash', help='Launch method')
-    parser.add_argument('--config', default='wmt.cfg',
+    parser.add_argument('--config', default='',
                         help='WMT site configuration file')
     parser.add_argument('--run', action='store_true',
                         help='Launch simulation')
