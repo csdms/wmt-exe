@@ -92,7 +92,7 @@ def create_user_execution_dir(run_id, prefix='~/.wmt'):
     run_id : str
         A unique UUID for a job.
     prefix : str, optional
-        Path to the launch directory (default is "~/.wmt").
+        Path to the run directory (default is "~/.wmt").
 
     Returns
     -------
@@ -615,9 +615,9 @@ class RunTask(WmtTaskReporter):
 
     """
     def __init__(self, run_id, server, exe_env=None, exe_dir='~/.wmt'):
-        super(RunTask, self).__init__(run_id, server)
+        super(RunTask, self).__init__(run_id, server, exe_dir=exe_dir)
 
-        self._wmt_dir = os.path.expanduser(exe_dir)
+        self._wmt_dir = os.path.expandvars(os.path.expanduser(exe_dir))
         self._sim_dir = create_user_execution_dir(run_id,
                                                   prefix=self._wmt_dir)
         self._env = exe_env

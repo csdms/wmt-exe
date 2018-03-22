@@ -5,6 +5,7 @@ import sys
 import os
 
 from ..launcher import BashLauncher, QsubLauncher, SbatchLauncher
+from ..config import load_configuration
 
 
 _LAUNCHERS = {
@@ -27,13 +28,27 @@ def main():
                         help='WMT API server URL')
     parser.add_argument('--launcher', choices=_LAUNCHERS.keys(),
                         default='bash', help='Launch method')
+    parser.add_argument('--config', default='',
+                        help='WMT site configuration file')
     parser.add_argument('--run', action='store_true',
                         help='Launch simulation')
 
     args = parser.parse_args()
 
+    config = load_configuration(args.config)
+    launch_dir = config.get('paths', 'launch_dir')
+    exec_dir = config.get('paths', 'exec_dir')
+
+    extra_args = []
+    extra_args.append('--exec-dir={}'.format(os.path.expandvars(exec_dir)))
+    if args.extra_args:
+        extra_args.append(args.extra_args)
+
     launcher = _LAUNCHERS[args.launcher](args.uuid,
-                                         server_url=args.server_url)
+                                         server_url=args.server_url,
+                                         launch_dir=launch_dir,
+                                         extra_args=extra_args)
+
     if args.run:
         launcher.run()
     else:

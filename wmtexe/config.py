@@ -23,6 +23,8 @@ _DEFAULTS = [
         ('python', _find_executable('python')),
         ('wmt_prefix', '/usr/local'),
         ('components_prefix', '/usr/local'),
+        ('exec_dir', '~/.wmt'),
+        ('launch_dir', '~/.wmt'),
     ]),
     ('launcher', [
         ('name', 'bash-launcher'),
@@ -60,6 +62,19 @@ class SiteConfiguration(object):
 
         """
         return self._config.items(section)
+
+    def get(self, section, option):
+        """Get a configuration value.
+
+        Parameters
+        ----------
+        section : str
+            Name of section in configuration.
+        option : str
+            Name of configuration option.
+
+        """
+        return self._config.get(section, option)
 
     def set(self, section, option, value):
         """Set a configuration value.
@@ -124,7 +139,6 @@ class SiteConfiguration(object):
         return contents.strip()
 
 
-DEFAULT = SiteConfiguration()
 INSTALL_ETC = os.path.join(sys.exec_prefix, 'etc')
 USER_CONFIG_PATH = os.path.expanduser('~/.wmt')
 

@@ -16,6 +16,10 @@ class Launcher(object):
         A unique UUID for the job.
     server_url : str or None, optional
         The URL of the WMT API server from which the job was submitted.
+    launch_dir : str, optional
+        The working directory from which the job is started.
+    extra_args : list, optional
+        Extra arguments to be passed to the wmt-slave command.
 
     Attributes
     ----------
@@ -29,16 +33,16 @@ class Launcher(object):
         The URL of the WMT API server from which the job was submitted.
 
     """
-    launch_dir = '~/.wmt'
     _script = "{slave_command}"
-    _extra_args = []
 
-    def __init__(self, sim_id, server_url=None):
+    def __init__(self, sim_id, server_url=None, launch_dir='~/.wmt',
+                 extra_args=[]):
         self.sim_id = sim_id
         self.server_url = server_url
-        self.script_path = os.path.expanduser(
-            os.path.join(self.launch_dir,
-                         '%s.sh' % self.sim_id))
+        self.launch_dir = os.path.expandvars(os.path.expanduser(launch_dir))
+        self.script_path = os.path.join(self.launch_dir,
+                                        '%s.sh' % self.sim_id)
+        self._extra_args = extra_args
 
     def before_launch(self, **kwds):
         """Perform actions before launching job.
@@ -49,6 +53,11 @@ class Launcher(object):
             Arbitrary keyword arguments.
 
         """
+        try:
+            os.makedirs(self.launch_dir)
+        except OSError:
+            if not os.path.isdir(self.launch_dir):
+                raise
         with open(self.script_path, 'w') as f:
             f.write(self.script(**kwds))
         os.chmod(self.script_path, stat.S_IXUSR|stat.S_IWUSR|stat.S_IRUSR)
@@ -182,7 +191,6 @@ cd $TMPDIR
 
 {slave_command}
 """.lstrip()
-    _extra_args = ['--exec-dir=$TMPDIR']
 
     def launch_command(self, **kwds):
         """Path to launch script.
@@ -211,6 +219,10 @@ class SbatchLauncher(Launcher):
         A unique UUID for the job.
     server_url : str or None, optional
         The URL of the WMT API server from which the job was submitted.
+    launch_dir : str, optional
+        The working directory from which the job is started.
+    extra_args : list, optional
+        Extra arguments to be passed to the wmt-slave command.
 
     Attributes
     ----------
