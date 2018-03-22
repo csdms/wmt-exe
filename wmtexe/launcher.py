@@ -53,6 +53,11 @@ class Launcher(object):
             Arbitrary keyword arguments.
 
         """
+        try:
+            os.makedirs(self.launch_dir)
+        except OSError:
+            if not os.path.isdir(self.launch_dir):
+                raise
         with open(self.script_path, 'w') as f:
             f.write(self.script(**kwds))
         os.chmod(self.script_path, stat.S_IXUSR|stat.S_IWUSR|stat.S_IRUSR)
