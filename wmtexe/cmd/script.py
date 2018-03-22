@@ -40,7 +40,7 @@ def main():
     exec_dir = config.get('paths', 'exec_dir')
 
     extra_args = []
-    extra_args.append('--exec-dir={}'.format(exec_dir))
+    extra_args.append('--exec-dir={}'.format(os.path.expandvars(exec_dir)))
     if args.extra_args:
         extra_args.append(args.extra_args)
 
@@ -48,6 +48,7 @@ def main():
                                          server_url=args.server_url,
                                          launch_dir=launch_dir,
                                          extra_args=extra_args)
+
     if args.run:
         launcher.run()
     else:
