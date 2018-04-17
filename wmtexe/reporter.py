@@ -289,6 +289,11 @@ class WmtTaskReporter(object):
         self._server = server
         self._curl = os.environ.get('CURL', 'curl')
         self._exe_dir = os.path.expandvars(os.path.expanduser(exe_dir))
+        try:
+            os.makedirs(self._exe_dir)
+        except OSError:
+            if not os.path.isdir(self._exe_dir):
+                raise
         log_file = os.path.join(self._exe_dir, '%s.log' % self.id)
         logging.basicConfig(filename=log_file, filemode='w',
                             level=logging.DEBUG)
