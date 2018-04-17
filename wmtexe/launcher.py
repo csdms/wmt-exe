@@ -242,6 +242,7 @@ class SbatchLauncher(Launcher):
 #!/usr/bin/env bash
 #SBATCH --qos=blanca-csdms
 #SBATCH --job-name=wmt
+#SBATCH --mem=8000MB
 
 export MPLBACKEND=Agg
 {slave_command}
