@@ -249,6 +249,7 @@ export MPLBACKEND=Agg
     _run_script = """
 #!/usr/bin/env bash
 
+source /etc/bashrc
 module load slurm/blanca
 sbatch --output={output_file} {script_path}
 """.lstrip()
