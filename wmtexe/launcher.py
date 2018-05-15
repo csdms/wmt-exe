@@ -2,7 +2,6 @@
 
 import os
 import sys
-import stat
 import subprocess
 from types import StringTypes
 
@@ -60,7 +59,7 @@ class Launcher(object):
                 raise
         with open(self.script_path, 'w') as f:
             f.write(self.script(**kwds))
-        os.chmod(self.script_path, stat.S_IXUSR|stat.S_IWUSR|stat.S_IRUSR)
+        os.chmod(self.script_path, 0755)
 
     def after_launch(self, **kwds):
         """Perform actions after launching job.
@@ -272,7 +271,7 @@ sbatch --output={output_file} {script_path}
         Launcher.before_launch(self, **kwds)
         with open(self.run_script_path, 'w') as f:
             f.write(self.run_script(**kwds))
-        os.chmod(self.run_script_path, stat.S_IXUSR|stat.S_IWUSR|stat.S_IRUSR)
+        os.chmod(self.run_script_path, 0755)
 
     def run_script(self, **kwds):
         """Generate the run script that submits job to scheduler.
