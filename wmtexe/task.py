@@ -405,8 +405,6 @@ def report_status(id, url, status, message):
         Response from server.
 
     """
-    import requests
-
     url = os.path.join(server, 'run/update')
     resp = requests.post(url, data={
         'uuid': id,
@@ -440,8 +438,6 @@ class __WmtReporter(object):
         return self.report('success', message)
 
     def report(self, status, message):
-        import requests
-
         logger.info('%s: %s' % (status, message))
 
         url = os.path.join(self.server, 'run/update')
