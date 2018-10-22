@@ -12,9 +12,9 @@ from ..env import WmtEnvironment
 
 class EnsureHttps(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
-        import urlparse
-        o = urlparse.urlsplit(values)
-        url = urlparse.urlunsplit(('https', o.netloc, o.path, '', ''))
+        import urllib.parse
+        o = urllib.parse.urlsplit(values)
+        url = urllib.parse.urlunsplit(('https', o.netloc, o.path, '', ''))
         setattr(namespace, self.dest, url)
 
 

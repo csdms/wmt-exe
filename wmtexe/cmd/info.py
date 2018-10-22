@@ -6,8 +6,8 @@ import sys
 
 
 def dict_to_ini(d, section):
-    from ConfigParser import ConfigParser
-    from StringIO import StringIO
+    from configparser import ConfigParser
+    from io import StringIO
 
     config = ConfigParser()
     config.add_section(section)
