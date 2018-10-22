@@ -655,7 +655,7 @@ class RunTask(WmtTaskReporter):
 
     def run(self):
         """Run all components in simulation."""
-        for (component, path) in components_to_run(self.sim_dir).items():
+        for (component, path) in list(components_to_run(self.sim_dir).items()):
             self.report('running', 'running component: %s' % component)
             self.run_component(component, run_dir=path)
 
@@ -770,7 +770,7 @@ class RunTask(WmtTaskReporter):
 class RunComponentsSeparately(RunTask):
     """Task for running components individually."""
     def run(self):
-        for (component, path) in components_to_run(self.sim_dir).items():
+        for (component, path) in list(components_to_run(self.sim_dir).items()):
             self.report('running', 'running component: %s' % component)
             self.run_component(component, run_dir=path)
 

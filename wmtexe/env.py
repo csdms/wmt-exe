@@ -288,6 +288,6 @@ class WmtEnvironment(object):
 
     def __str__(self):
         lines = []
-        for item in self._env.items():
+        for item in list(self._env.items()):
             lines.append('export %s=%s' % item)
         return linesep.join(lines)

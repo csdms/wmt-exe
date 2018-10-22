@@ -345,7 +345,7 @@ def create_bmi_class(name, bocca=None, language='c', bmi_mapping=None,
     except KeyError:
         bmi_mapping['defines'] = ''
 
-    for key in bmi_mapping.keys():
+    for key in list(bmi_mapping.keys()):
         bmi_mapping['bmi_' + key] = bmi_mapping[key]
 
     with mktemp(prefix='csdms', suffix='.d') as destdir:

@@ -27,7 +27,7 @@ def main():
                         help='Extra arguments for wmt-slave command')
     parser.add_argument('--server-url', default='',
                         help='WMT API server URL')
-    parser.add_argument('--launcher', choices=_LAUNCHERS.keys(),
+    parser.add_argument('--launcher', choices=list(_LAUNCHERS.keys()),
                         default='bash', help='Launch method')
     parser.add_argument('--config', default='',
                         help='WMT site configuration file')

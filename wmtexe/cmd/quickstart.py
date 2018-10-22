@@ -66,7 +66,7 @@ def dict_to_ini(d, section):
     config = ConfigParser()
     config.add_section(section)
 
-    for (key, value) in d.items():
+    for (key, value) in list(d.items()):
         config.set(section, key, value)
 
     output = StringIO()
