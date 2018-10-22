@@ -30,7 +30,7 @@ class Prompter(object):
     def _get_non_empty_input(self, text, default=None):
         if self._interactive:
             while True:
-                val = input(self.render_prompt(text, default=default))
+                val = eval(input(self.render_prompt(text, default=default)))
                 if default and not val:
                     val = default
                 break
@@ -42,7 +42,7 @@ class Prompter(object):
     def list(self, key, text, default=None):
         vals = []
         while True:
-            val = input(self.render_prompt(text, default=default))
+            val = eval(input(self.render_prompt(text, default=default)))
             if default and not val:
                 val = default
             if len(val.strip()) > 0:

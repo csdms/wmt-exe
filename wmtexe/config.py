@@ -103,7 +103,7 @@ class SiteConfiguration(object):
             Name of configuration file.
 
         """
-        if isinstance(file, (str,)):
+        if isinstance(file, str):
             with open(file, 'w') as fp:
                 self.write(fp)
         else:

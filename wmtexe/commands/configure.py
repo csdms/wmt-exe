@@ -44,7 +44,7 @@ class Configure(Command):
         pass
 
     def run(self):
-        import ConfigParser
+        import configparser
 
         from ..config import SiteConfiguration
 
