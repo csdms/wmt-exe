@@ -1,5 +1,7 @@
 """Get information about the current wmt-exe environment."""
 
+from __future__ import print_function
+
 import sys
 
 
@@ -46,4 +48,4 @@ def main():
         'directory': args.directory,
     }
 
-    print dict_to_ini(host_info, args.host)
+    print(dict_to_ini(host_info, args.host))

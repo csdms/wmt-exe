@@ -1,5 +1,7 @@
 """Classes for configuring a wmt-exe environment."""
 
+from __future__ import print_function
+
 import sys
 from os import path, pathsep, linesep
 from collections import OrderedDict
@@ -88,7 +90,7 @@ class Babel(object):
             return subprocess.check_output(
                 [self.cca_spec_babel_config, '--var', var]).strip()
         except (OSError, subprocess.CalledProcessError):
-            print [self.cca_spec_babel_config, '--var', var]
+            print([self.cca_spec_babel_config, '--var', var])
             raise
             return None
 

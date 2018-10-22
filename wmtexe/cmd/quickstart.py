@@ -1,5 +1,7 @@
 """Configure a wmt-exe environment from the command prompt."""
 
+from __future__ import print_function
+
 import os
 from distutils.spawn import find_executable
 
@@ -141,4 +143,4 @@ def main():
         qsub_launcher = prompt_for_qsub_launcher(**kwds)
         sections.append(dict_to_ini(qsub_launcher, 'qsub-launcher'))
 
-    print (os.linesep * 2).join(sections)
+    print((os.linesep * 2).join(sections))

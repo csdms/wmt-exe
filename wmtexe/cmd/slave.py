@@ -1,5 +1,7 @@
 """Initiate and monitor a task slave for a WMT simulation."""
 
+from __future__ import print_function
+
 import os
 import sys
 import argparse
@@ -43,7 +45,7 @@ def main():
     #     ['/home/csdms/wmt/topoflow.1/conda/bin', env['PATH']])
 
     if args.show_env:
-        print str(env)
+        print(str(env))
         return
 
     # slave = Slave(args.server_url, env=env.env)
@@ -56,8 +58,8 @@ def main():
     #    print error
     except Exception as error:
         slave.report_error(args.id, traceback.format_exc())
-        print traceback.format_exc()
+        print(traceback.format_exc())
     else:
         slave.report_success(
             args.id, 'simulation is complete and available for pickup')
-        print 'success'
+        print('success')

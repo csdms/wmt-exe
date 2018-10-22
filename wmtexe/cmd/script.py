@@ -1,6 +1,7 @@
 """Launch a WMT simulation using `bash` or `qsub`."""
 
 from __future__ import print_function
+
 import sys
 import os
 

@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+from __future__ import print_function
+
 import os
 import subprocess
 import types
@@ -136,7 +138,7 @@ def replace_class_name(src, dest, include=None, prefix=None, cflags=None,
             elif line.startswith('LIBS ='):
                 line = ' '.join([line.rstrip(), libs])
 
-            print line.rstrip()
+            print(line.rstrip())
         f.close()
 
 

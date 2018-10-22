@@ -1,5 +1,6 @@
-import argparse
+from __future__ import print_function
 
+import argparse
 import yaml
 
 from .bocca import make_project, ProjectExistsError
@@ -17,7 +18,7 @@ def main():
     try:
         make_project(yaml.load(args.file), clobber=args.clobber)
     except ProjectExistsError as error:
-        print 'The specified project (%s) already exists. Exiting.' % error
+        print('The specified project (%s) already exists. Exiting.' % error)
 
 
 if __name__ == '__main__':

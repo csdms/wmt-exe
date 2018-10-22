@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+from __future__ import print_function
+
 import os
 import subprocess
 import re
@@ -107,7 +109,7 @@ def main():
 
         add_bmi_component(proj, bmi)
 
-    print yaml.dump(proj, default_flow_style=False)
+    print(yaml.dump(proj, default_flow_style=False))
 
 
 if __name__ == '__main__':

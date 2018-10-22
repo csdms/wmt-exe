@@ -1,6 +1,6 @@
 """Configures a wmt-exe environment with setuptools."""
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 from setuptools import Command
 from distutils.spawn import find_executable
@@ -61,7 +61,7 @@ class Configure(Command):
         config.set('paths', 'exec_dir', self.exec_dir)
 
         if path.isfile('wmt.cfg') and not self.clobber:
-            print 'wmt.cfg: file exists (use --clobber to overwrite)'
+            print('wmt.cfg: file exists (use --clobber to overwrite)')
         else:
             config.write('wmt.cfg')
-            print 'configuration written to wmt.cfg'
+            print('configuration written to wmt.cfg')

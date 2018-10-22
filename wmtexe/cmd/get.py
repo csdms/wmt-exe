@@ -3,6 +3,9 @@
 Connect to a WMT server and download a staged simulation using a universal
 unique identifier.
 """
+
+from __future__ import print_function
+
 import os
 import sys
 import argparse
@@ -17,7 +20,7 @@ def download_or_exit(url, id, dest):
         tarball = download_run_tarball(url, id,
                                        dest_dir=dest)
     except DownloadError as error:
-        print '==> Error: %s' % error
+        print('==> Error: %s' % error)
         sys.exit(1)
 
     return os.path.normpath(tarball)
@@ -28,7 +31,7 @@ def unpack_or_exit(name, dest):
         with tarfile.open(name, 'r') as tar:
             tar.extractall(path=dest)
     except tarfile.TarError as error:
-        print '==> Error: %s' % error
+        print('==> Error: %s' % error)
         sys.exit(1)
     try:
         base = name[:- len('.tar.gz')]
@@ -74,24 +77,24 @@ def main():
     env = WmtEnvironment.from_config(args.config)
 
     if args.show_env:
-        print str(env)
+        print(str(env))
         return
 
     if args.verbose:
-        print '==> connecting %s' % args.url
-        print '==> downloading %s' % args.id
+        print('==> connecting %s' % args.url)
+        print('==> downloading %s' % args.id)
 
     tarball = download_or_exit(args.url, args.id, args.dest)
 
     if args.unpack == 'yes':
         if args.verbose:
-            print '==> unpacking %s' % tarball
+            print('==> unpacking %s' % tarball)
 
         unpack_or_exit(tarball, args.dest)
 
         if args.clean:
-            print '==> removing %s' % tarball
+            print('==> removing %s' % tarball)
             os.remove(tarball)
 
     if args.verbose:
-        print '==> success'
+        print('==> success')

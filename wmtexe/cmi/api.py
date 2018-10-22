@@ -1,7 +1,8 @@
 #! /usr/bin/env python
+from __future__ import print_function
+
 import os
 import types
-
 import yaml
 
 from .utils import cd, check_output, system
@@ -16,7 +17,7 @@ _VALID_KEYS = _REQUIRED_KEYS | _OPTIONAL_KEYS
 
 def is_valid_api(api):
     if not isinstance(api, dict):
-        print 'not a dict'
+        print('not a dict')
         return False
 
     found_keys = set(api.keys())
@@ -25,7 +26,7 @@ def is_valid_api(api):
         return False
 
     if not found_keys.issubset(_VALID_KEYS):
-        print 'unknown key'
+        print('unknown key')
         return False
 
     return True

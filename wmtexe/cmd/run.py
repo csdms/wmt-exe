@@ -1,5 +1,7 @@
 """Run a simulation from an existing WMT configuration."""
 
+from __future__ import print_function
+
 import os
 import argparse
 
@@ -49,7 +51,7 @@ def main():
     env = WmtEnvironment.from_config(args.config)
 
     if args.show_env:
-        print str(env)
+        print(str(env))
         return
 
     run(args.path)

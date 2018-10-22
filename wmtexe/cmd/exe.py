@@ -1,5 +1,7 @@
 """Execute a WMT simulation."""
 
+from __future__ import print_function
+
 import os
 import sys
 import subprocess
@@ -51,7 +53,7 @@ def main():
                 # pipe = subprocess.Popen(cmd, env=env.env, stdout=stdout,
                 pipe = subprocess.Popen(cmd, env=env, stdout=stdout,
                                         stderr=stderr)
-        print pipe.pid
+        print(pipe.pid)
     else:
         # subprocess.call(cmd, env=env.env)
         subprocess.call(cmd, env=env)
