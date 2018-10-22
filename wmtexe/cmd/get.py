@@ -36,7 +36,7 @@ def unpack_or_exit(name, dest):
     try:
         base = name[:- len('.tar.gz')]
         for r, _, _ in os.walk(base):
-            os.chmod(r, 0777 - get_umask())
+            os.chmod(r, 0o777 - get_umask())
     except OSError:
         raise
 

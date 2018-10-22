@@ -58,7 +58,7 @@ def build_api(build):
     if isinstance(build, dict) and 'brew' in build:
         brew = build['brew']
         opts = brew.get('options', [])
-        if isinstance(opts, types.StringTypes):
+        if isinstance(opts, str):
             opts = [opts]
         system(['brew', 'install', brew['formula']] + opts)
     else:

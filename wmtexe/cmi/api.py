@@ -40,7 +40,7 @@ def is_valid_api_or_raise(api):
 def generate_compile_opts(flags, opt):
     assert(opt in ['--cflags', '--libs'])
 
-    if isinstance(flags, types.StringTypes):
+    if isinstance(flags, str):
         return flags
 
     try:
@@ -82,7 +82,7 @@ def execute_build(build):
     brew = build['brew']
     opts = brew.get('options', [])
 
-    if isinstance(opts, types.StringTypes):
+    if isinstance(opts, str):
         opts = [opts]
 
     system(['brew', 'install', brew['formula']] + opts)

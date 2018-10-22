@@ -143,7 +143,7 @@ def replace_class_name(src, dest, include=None, prefix=None, cflags=None,
 
 
 def substitute_in_file(file_like, pattern, repl):
-    if isinstance(file_like, types.StringTypes):
+    if isinstance(file_like, str):
         with open(file_like, 'r') as fp:
             contents = fp.read()
     else:
@@ -163,7 +163,7 @@ def substitute_patterns(subs, string):
 
 
 def substitute_patterns_in_file(subs, file_like):
-    if isinstance(file_like, types.StringTypes):
+    if isinstance(file_like, str):
         with open(file_like, 'r') as fp:
             contents = fp.read()
     else:
@@ -315,7 +315,7 @@ _GRID_TYPE_FUNCTIONS = {
 }
 
 def get_grid_type_defines(grid_types):
-    if isinstance(grid_types, types.StringTypes):
+    if isinstance(grid_types, str):
         grid_types = [grid_types]
 
     defines = []
@@ -336,7 +336,7 @@ def create_bmi_class(name, bocca=None, language='c', bmi_mapping=None,
         bmi_mapping.setdefault('libs', pkg_config(pkg_config_package, '--libs'))
 
     bmi_mapping.setdefault('includes', '')
-    if not isinstance(bmi_mapping['includes'], types.StringTypes):
+    if not isinstance(bmi_mapping['includes'], str):
         bmi_mapping['includes'] = os.linesep.join(bmi_mapping['includes'])
 
     bmi_mapping.setdefault('prefix', '')
