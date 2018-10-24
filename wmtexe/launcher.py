@@ -3,7 +3,6 @@
 import os
 import sys
 import subprocess
-from types import StringTypes
 
 
 class Launcher(object):
@@ -154,7 +153,7 @@ class Launcher(object):
             command += ['--server-url={}'.format(self.server_url)]
 
         if extra_args:
-            if isinstance(extra_args, StringTypes):
+            if isinstance(extra_args, str):
                 extra_args = shlex.split(extra_args)
             command += [quote(arg) for arg in extra_args]
 
