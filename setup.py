@@ -42,6 +42,8 @@ setup(
 
     packages=['wmtexe', 'wmtexe.cmd', 'wmtexe.cmi'],
 
+    install_requires=['requests'],
+
     entry_points={
         'console_scripts': [
             'wmt-slave=wmtexe.cmd.slave:main',
