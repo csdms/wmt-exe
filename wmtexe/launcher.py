@@ -331,6 +331,7 @@ class BashLauncher(Launcher):
 #! /bin/bash
 
 export PATH={wmt_path}
+source activate root
 
 {slave_command}
 """.lstrip()
