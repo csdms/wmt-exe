@@ -42,7 +42,7 @@ setup(
 
     packages=['wmtexe', 'wmtexe.cmd', 'wmtexe.cmi'],
 
-    install_requires=['requests'],
+    install_requires=['requests', 'configparser'],
 
     entry_points={
         'console_scripts': [
