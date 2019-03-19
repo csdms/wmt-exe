@@ -139,6 +139,7 @@ class SiteConfiguration(object):
         return contents.strip()
 
 
+DEFAULT = SiteConfiguration()
 INSTALL_ETC = os.path.join(sys.exec_prefix, 'etc')
 USER_CONFIG_PATH = os.path.expanduser('~/.wmt')
 
