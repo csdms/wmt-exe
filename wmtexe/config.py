@@ -38,7 +38,7 @@ _DEFAULTS = [
 class SiteConfiguration(object):
     """Configure a wmt-exe environment."""
     def __init__(self):
-        from ConfigParser import ConfigParser
+        from configparser import ConfigParser
 
         config = ConfigParser()
         for section, values in _DEFAULTS:
@@ -103,7 +103,7 @@ class SiteConfiguration(object):
             Name of configuration file.
 
         """
-        if isinstance(file, types.StringTypes):
+        if isinstance(file, str):
             with open(file, 'w') as fp:
                 self.write(fp)
         else:
@@ -129,7 +129,7 @@ class SiteConfiguration(object):
         return conf
 
     def __str__(self):
-        from StringIO import StringIO
+        from io import StringIO
         output = StringIO()
         self._config.write(output)
 

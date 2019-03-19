@@ -1,6 +1,7 @@
 """Activate and deactivate a wmt-exe environment."""
 
 from __future__ import print_function
+
 import sys
 import os
 
@@ -89,7 +90,7 @@ def environ_update(env):
 
 def environ_as_bash_commands(env):
     commands = []
-    names = env.keys()
+    names = list(env.keys())
     names.sort()
     for name in names:
         if env[name] is None:

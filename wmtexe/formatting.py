@@ -26,7 +26,7 @@ _COLORS = [
 
 _CODES = {}
 
-for (_attr, _val) in _ATTRS.items():
+for (_attr, _val) in list(_ATTRS.items()):
     _CODES[_attr] = '\x1b[' + _val
 
 

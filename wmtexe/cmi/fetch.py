@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+from __future__ import print_function
+
 import os
 import subprocess
 import re
@@ -56,7 +58,7 @@ def build_api(build):
     if isinstance(build, dict) and 'brew' in build:
         brew = build['brew']
         opts = brew.get('options', [])
-        if isinstance(opts, types.StringTypes):
+        if isinstance(opts, str):
             opts = [opts]
         system(['brew', 'install', brew['formula']] + opts)
     else:
@@ -107,7 +109,7 @@ def main():
 
         add_bmi_component(proj, bmi)
 
-    print yaml.dump(proj, default_flow_style=False)
+    print(yaml.dump(proj, default_flow_style=False))
 
 
 if __name__ == '__main__':

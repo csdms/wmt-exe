@@ -1,5 +1,7 @@
 """Configure a wmt-exe environment from the command prompt."""
 
+from __future__ import print_function
+
 import os
 from distutils.spawn import find_executable
 
@@ -28,7 +30,7 @@ class Prompter(object):
     def _get_non_empty_input(self, text, default=None):
         if self._interactive:
             while True:
-                val = raw_input(self.render_prompt(text, default=default))
+                val = eval(input(self.render_prompt(text, default=default)))
                 if default and not val:
                     val = default
                 break
@@ -40,7 +42,7 @@ class Prompter(object):
     def list(self, key, text, default=None):
         vals = []
         while True:
-            val = raw_input(self.render_prompt(text, default=default))
+            val = eval(input(self.render_prompt(text, default=default)))
             if default and not val:
                 val = default
             if len(val.strip()) > 0:
@@ -58,13 +60,13 @@ class Prompter(object):
 
 
 def dict_to_ini(d, section):
-    from ConfigParser import ConfigParser
-    from StringIO import StringIO
+    from configparser import ConfigParser
+    from io import StringIO
 
     config = ConfigParser()
     config.add_section(section)
 
-    for (key, value) in d.items():
+    for (key, value) in list(d.items()):
         config.set(section, key, value)
 
     output = StringIO()
@@ -141,4 +143,4 @@ def main():
         qsub_launcher = prompt_for_qsub_launcher(**kwds)
         sections.append(dict_to_ini(qsub_launcher, 'qsub-launcher'))
 
-    print (os.linesep * 2).join(sections)
+    print((os.linesep * 2).join(sections))

@@ -96,7 +96,7 @@ def which(prog, env=None):
 
 
 def pkg_config(name, opts):
-    if isinstance(opts, types.StringTypes):
+    if isinstance(opts, str):
         opts = [opts]
 
     try:

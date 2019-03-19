@@ -70,9 +70,9 @@ def result_message(assertion, checking):
 
     """
     if assertion:
-        return ' '.join([formatting.green(u'\u2713'), checking, 'yes'])
+        return ' '.join([formatting.green('\\u2713'), checking, 'yes'])
     else:
-        return ' '.join([formatting.red(u'\u2717'), checking, 'no'])
+        return ' '.join([formatting.red('\\u2717'), checking, 'no'])
 
 
 def check_is_executable(program):

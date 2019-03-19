@@ -1,16 +1,18 @@
 """Get information about the current wmt-exe environment."""
 
+from __future__ import print_function
+
 import sys
 
 
 def dict_to_ini(d, section):
-    from ConfigParser import ConfigParser
-    from StringIO import StringIO
+    from configparser import ConfigParser
+    from io import StringIO
 
     config = ConfigParser()
     config.add_section(section)
 
-    for (key, value) in d.items():
+    for (key, value) in list(d.items()):
         config.set(section, key, value)
 
     output = StringIO()
@@ -46,4 +48,4 @@ def main():
         'directory': args.directory,
     }
 
-    print dict_to_ini(host_info, args.host)
+    print(dict_to_ini(host_info, args.host))

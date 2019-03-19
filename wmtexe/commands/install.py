@@ -1,8 +1,9 @@
 """Installs wmt-exe with setuptools."""
 
+from __future__ import print_function
+
 from setuptools.command.install import install
 import os
-
 
 from .. import formatting
 
@@ -64,5 +65,5 @@ class Install(install):
 
         self.copy_file('wmt.cfg', wmt_cfg)
 
-        print formatting.bright(formatting.red(
-            _POST_INSTALL_MESSAGE.format(wmt_cfg=wmt_cfg)))
+        print(formatting.bright(formatting.red(
+            _POST_INSTALL_MESSAGE.format(wmt_cfg=wmt_cfg))))

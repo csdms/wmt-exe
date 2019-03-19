@@ -42,6 +42,8 @@ setup(
 
     packages=['wmtexe', 'wmtexe.cmd', 'wmtexe.cmi'],
 
+    install_requires=['requests'],
+
     entry_points={
         'console_scripts': [
             'wmt-slave=wmtexe.cmd.slave:main',
@@ -64,4 +66,10 @@ setup(
         'configure': Configure,
         'install': Install,
     },
+
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'License :: OSI Approved :: MIT License',
+        'Programming Language :: Python :: 2.7',
+    ],
 )
